@@ -1,0 +1,41 @@
+// Core domain types for Tracking.
+//
+// Design principle: the user has exactly ONE monthly budget, no matter how many
+// bank accounts or cards they own. Every expense is just a deduction against that
+// single budget. We never model accounts — that's the whole point.
+
+export interface Expense {
+  id: string
+  /** Positive number, in the app's single currency. */
+  amount: number
+  /** Free-text label, e.g. "Groceries", "Coffee". */
+  category: string
+  note?: string
+  /** ISO date string (YYYY-MM-DD) of when the money was spent. */
+  date: string
+  /** ms timestamp of creation, used for stable sorting. */
+  createdAt: number
+}
+
+export interface Settings {
+  /** The single monthly budget cap. */
+  monthlyBudget: number
+  /** ISO 4217-ish symbol/label shown next to amounts. Kept simple as a string. */
+  currency: string
+  /**
+   * When remaining budget drops to this fraction (0-1) of the total, we warn.
+   * e.g. 0.2 => warn once only 20% of the budget is left.
+   */
+  warnThreshold: number
+}
+
+export interface AppState {
+  settings: Settings
+  expenses: Expense[]
+}
+
+export const DEFAULT_SETTINGS: Settings = {
+  monthlyBudget: 1000,
+  currency: '$',
+  warnThreshold: 0.2,
+}
