@@ -25,15 +25,23 @@ for (const key of DEFAULT_KEYS) {
   NAME_TO_KEY[translate(DEFAULT_TK[key], 'en')] = key
 }
 
+// Longest known name first, so e.g. "交通" doesn't shadow a longer match.
+const KNOWN_NAMES = Object.keys(NAME_TO_KEY).sort((a, b) => b.length - a.length)
+
 /**
  * Display label for a stored category name. Built-in categories (still at one
  * of their two translated names, i.e. never renamed) follow the current UI
- * language; anything else — a rename, or a category the user typed themselves
- * — has no translation, so it's shown exactly as stored.
+ * language. A name that still *starts with* a built-in translation (e.g. "交
+ * 通·油费") gets that recognized prefix translated and the custom suffix left
+ * as-is. Anything else — a full rename, or a category typed from scratch —
+ * has no known translation, so it's shown exactly as stored.
  */
 export function categoryDisplay(name: string, lang: Lang): string {
   const key = NAME_TO_KEY[name]
-  return key ? translate(DEFAULT_TK[key], lang) : name
+  if (key) return translate(DEFAULT_TK[key], lang)
+  const prefix = KNOWN_NAMES.find((known) => name.startsWith(known) && name.length > known.length)
+  if (prefix) return translate(DEFAULT_TK[NAME_TO_KEY[prefix]], lang) + name.slice(prefix.length)
+  return name
 }
 
 /**
