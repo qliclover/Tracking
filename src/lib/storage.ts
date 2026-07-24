@@ -2,23 +2,24 @@ import { AppState, DEFAULT_SETTINGS, Expense } from './types'
 
 const STORAGE_KEY = 'margin.appState.v1'
 
-const EMPTY_STATE: AppState = {
-  settings: DEFAULT_SETTINGS,
-  expenses: [],
+export function emptyState(): AppState {
+  return { settings: DEFAULT_SETTINGS, expenses: [], profile: {}, updatedAt: 0 }
 }
 
 /** Read the persisted state, tolerating missing/corrupt data. */
 export function loadState(): AppState {
   try {
     const raw = localStorage.getItem(STORAGE_KEY)
-    if (!raw) return EMPTY_STATE
+    if (!raw) return emptyState()
     const parsed = JSON.parse(raw) as Partial<AppState>
     return {
       settings: { ...DEFAULT_SETTINGS, ...(parsed.settings ?? {}) },
       expenses: Array.isArray(parsed.expenses) ? parsed.expenses : [],
+      profile: parsed.profile ?? {},
+      updatedAt: typeof parsed.updatedAt === 'number' ? parsed.updatedAt : 0,
     }
   } catch {
-    return EMPTY_STATE
+    return emptyState()
   }
 }
 

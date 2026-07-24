@@ -1,19 +1,22 @@
 import { useEffect, useMemo, useState } from 'react'
-import { AppState, Settings } from './lib/types'
+import { AppState, Profile, Settings } from './lib/types'
 import { ExpenseDraft } from './lib/receipt'
-import { loadState, saveState, makeExpense } from './lib/storage'
+import { loadState, saveState, makeExpense, emptyState } from './lib/storage'
 import { expensesForMonth, monthKey, summarize } from './lib/budget'
 import { monthLabel } from './lib/format'
-import { Theme, getTheme, applyTheme, nextTheme } from './lib/theme'
+import { Theme, getTheme, applyTheme } from './lib/theme'
+import { useSync } from './lib/useSync'
 import { BudgetCard } from './components/BudgetCard'
 import { EntrySection } from './components/EntrySection'
 import { ExpenseList } from './components/ExpenseList'
-import { SettingsDialog } from './components/SettingsDialog'
+import { SettingsPage } from './components/SettingsPage'
+
+type View = 'home' | 'settings'
 
 export default function App() {
   const [state, setState] = useState<AppState>(() => loadState())
   const [theme, setTheme] = useState<Theme>(() => getTheme())
-  const [settingsOpen, setSettingsOpen] = useState(false)
+  const [view, setView] = useState<View>('home')
 
   useEffect(() => {
     saveState(state)
@@ -23,17 +26,22 @@ export default function App() {
     applyTheme(theme)
   }, [theme])
 
-  const currentMonth = monthKey()
+  const sync = useSync({ state, onRemote: (remote) => setState(remote) })
 
+  const currentMonth = monthKey()
   const monthExpenses = useMemo(
     () => expensesForMonth(state.expenses, currentMonth),
     [state.expenses, currentMonth],
   )
-
   const summary = useMemo(
     () => summarize(monthExpenses, state.settings),
     [monthExpenses, state.settings],
   )
+
+  /** Apply a mutation and stamp updatedAt so sync knows it changed. */
+  function update(mut: (s: AppState) => AppState) {
+    setState((prev) => ({ ...mut(prev), updatedAt: Date.now() }))
+  }
 
   function addExpense(draft: ExpenseDraft) {
     const expense = makeExpense({
@@ -45,19 +53,76 @@ export default function App() {
       merchant: draft.merchant,
       items: draft.items,
     })
-    setState((s) => ({ ...s, expenses: [...s.expenses, expense] }))
+    update((s) => ({ ...s, expenses: [...s.expenses, expense] }))
   }
 
   function deleteExpense(id: string) {
-    setState((s) => ({ ...s, expenses: s.expenses.filter((e) => e.id !== id) }))
+    update((s) => ({ ...s, expenses: s.expenses.filter((e) => e.id !== id) }))
   }
 
   function saveSettings(next: Settings) {
-    setState((s) => ({ ...s, settings: next }))
-    setSettingsOpen(false)
+    update((s) => ({ ...s, settings: next }))
   }
 
-  const themeShort = theme === 'system' ? 'Auto' : theme === 'light' ? 'Light' : 'Dark'
+  function saveProfile(next: Profile) {
+    update((s) => ({ ...s, profile: next }))
+  }
+
+  function exportBackup() {
+    const blob = new Blob([JSON.stringify(state, null, 2)], { type: 'application/json' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `margin-backup-${currentMonth}.json`
+    a.click()
+    URL.revokeObjectURL(url)
+  }
+
+  function importBackup(file: File) {
+    const reader = new FileReader()
+    reader.onload = () => {
+      try {
+        const parsed = JSON.parse(String(reader.result)) as Partial<AppState>
+        update((s) => ({
+          ...s,
+          settings: { ...s.settings, ...(parsed.settings ?? {}) },
+          expenses: Array.isArray(parsed.expenses) ? parsed.expenses : s.expenses,
+          profile: parsed.profile ?? s.profile,
+        }))
+      } catch {
+        alert('That file could not be read as a Margin backup.')
+      }
+    }
+    reader.readAsText(file)
+  }
+
+  function clearAll() {
+    if (confirm('Delete all expenses and reset settings? This cannot be undone.')) {
+      update(() => emptyState())
+    }
+  }
+
+  if (view === 'settings') {
+    return (
+      <div className="app">
+        <SettingsPage
+          settings={state.settings}
+          profile={state.profile}
+          theme={theme}
+          sync={sync}
+          onSettings={saveSettings}
+          onProfile={saveProfile}
+          onTheme={setTheme}
+          onExport={exportBackup}
+          onImport={importBackup}
+          onClear={clearAll}
+          onBack={() => setView('home')}
+        />
+      </div>
+    )
+  }
+
+  const initial = (state.profile.name?.trim()?.[0] || 'M').toUpperCase()
 
   return (
     <div className="app">
@@ -67,24 +132,19 @@ export default function App() {
           <span className="month">{monthLabel(currentMonth)}</span>
         </div>
         <button
-          className="theme-toggle"
-          onClick={() => setTheme((t) => nextTheme(t))}
-          aria-label="Toggle theme"
-          title="Toggle appearance"
+          className="avatar avatar-btn"
+          onClick={() => setView('settings')}
+          aria-label="Settings"
         >
-          {themeShort}
+          {state.profile.avatar ? <img src={state.profile.avatar} alt="" /> : <span>{initial}</span>}
         </button>
       </header>
 
       <main className="content">
         <BudgetCard summary={summary} currency={state.settings.currency} />
-
         <div className="rule" />
-
         <EntrySection currency={state.settings.currency} onAdd={addExpense} />
-
         <div className="rule" />
-
         <ExpenseList
           expenses={monthExpenses}
           currency={state.settings.currency}
@@ -92,25 +152,7 @@ export default function App() {
         />
       </main>
 
-      <button
-        className="btn btn-ghost"
-        style={{ marginTop: 20 }}
-        onClick={() => setSettingsOpen(true)}
-      >
-        Budget settings
-      </button>
-
       <footer className="footer">Room to spend</footer>
-
-      {settingsOpen && (
-        <SettingsDialog
-          settings={state.settings}
-          theme={theme}
-          onSave={saveSettings}
-          onThemeChange={setTheme}
-          onClose={() => setSettingsOpen(false)}
-        />
-      )}
     </div>
   )
 }

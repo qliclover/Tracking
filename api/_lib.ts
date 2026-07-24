@@ -1,24 +1,44 @@
-import { anthropic } from '@ai-sdk/anthropic'
+import { createOpenAICompatible } from '@ai-sdk/openai-compatible'
 import type { LanguageModel } from 'ai'
 
 /**
- * The model used for both receipt vision and voice parsing.
- * Override with the AI_MODEL env var. The default is a stable, vision-capable
- * Claude model. Requires ANTHROPIC_API_KEY to be set in the environment.
+ * AI provider: Alibaba DashScope (Tongyi Qwen) via its OpenAI-compatible API.
+ * Works from mainland China. Requires DASHSCOPE_API_KEY.
+ *
+ * Because it's OpenAI-compatible, you can point this at any compatible domestic
+ * provider (Zhipu, Kimi, Doubao, …) by overriding AI_BASE_URL + the model names.
  */
-export function model(): LanguageModel {
-  const id = process.env.AI_MODEL || 'claude-3-5-sonnet-latest'
-  return anthropic(id)
+const BASE_URL =
+  process.env.AI_BASE_URL || 'https://dashscope.aliyuncs.com/compatible-mode/v1'
+
+function provider() {
+  return createOpenAICompatible({
+    name: 'dashscope',
+    baseURL: BASE_URL,
+    apiKey: process.env.DASHSCOPE_API_KEY,
+  })
+}
+
+/** Vision-capable model for reading receipt photos. */
+export function visionModel(): LanguageModel {
+  const id = process.env.AI_VISION_MODEL || 'qwen-vl-max'
+  return provider()(id)
+}
+
+/** Text model for parsing a spoken/typed expense. */
+export function textModel(): LanguageModel {
+  const id = process.env.AI_TEXT_MODEL || 'qwen-plus'
+  return provider()(id)
 }
 
 export function hasKey(): boolean {
-  return Boolean(process.env.ANTHROPIC_API_KEY)
+  return Boolean(process.env.DASHSCOPE_API_KEY)
 }
 
 /** Categories the model should choose from when tagging an expense. */
 export const CATEGORIES = ['Food', 'Transport', 'Shopping', 'Bills', 'Fun', 'Other']
 
-/** Today's date as YYYY-MM-DD, used as a default and to steer relative dates. */
+/** Today's date as YYYY-MM-DD. */
 export function todayISO(): string {
   const d = new Date()
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(

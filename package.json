@@ -12,11 +12,14 @@
     "lint": "tsc -b --noEmit"
   },
   "dependencies": {
-    "@ai-sdk/anthropic": "^1.2.12",
+    "@ai-sdk/openai-compatible": "^0.2.16",
     "ai": "^4.3.19",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "zod": "^3.24.1"
+  },
+  "optionalDependencies": {
+    "leancloud-storage": "^4.15.2"
   },
   "devDependencies": {
     "@types/react": "^18.3.12",

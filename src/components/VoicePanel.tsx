@@ -16,8 +16,12 @@ export function VoicePanel({ currency, onAdd }: Props) {
   const [error, setError] = useState('')
   const [draft, setDraft] = useState<ExpenseDraft | null>(null)
   const [typed, setTyped] = useState('')
+  const [typeMode, setTypeMode] = useState(!speech.supported)
 
-  const text = speech.supported ? speech.transcript : typed
+  // Browser dictation relies on Google servers and fails in mainland China —
+  // fall back to typing automatically if the mic errors.
+  const useTyping = typeMode || !speech.supported || Boolean(speech.error)
+  const text = useTyping ? typed : speech.transcript
 
   async function analyze() {
     const t = text.trim()
@@ -58,7 +62,7 @@ export function VoicePanel({ currency, onAdd }: Props) {
 
   return (
     <div>
-      {speech.supported ? (
+      {!useTyping ? (
         <>
           <button
             type="button"
@@ -70,25 +74,26 @@ export function VoicePanel({ currency, onAdd }: Props) {
           </button>
           <p className="transcript">
             {speech.transcript || (
-              <span className="muted">e.g. “Twelve forty on lunch at the cafe today”</span>
+              <span className="muted">e.g. “午饭花了 25 块” / “12.40 on lunch today”</span>
             )}
           </p>
+          <button type="button" className="link" onClick={() => setTypeMode(true)}>
+            Type instead
+          </button>
         </>
       ) : (
         <div className="field">
           <label className="flabel" htmlFor="typed">Describe the expense</label>
           <input
             id="typed"
-            placeholder="e.g. 12.40 on lunch today"
+            placeholder="例如：午饭花了 25 块 / 12.40 on lunch today"
             value={typed}
             onChange={(e) => setTyped(e.target.value)}
           />
         </div>
       )}
 
-      {(speech.error || error) && (
-        <p className="error" style={{ marginTop: 8 }}>{speech.error || error}</p>
-      )}
+      {error && <p className="error" style={{ marginTop: 8 }}>{error}</p>}
 
       <button
         type="button"

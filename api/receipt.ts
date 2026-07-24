@@ -1,7 +1,7 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node'
 import { generateObject } from 'ai'
 import { z } from 'zod'
-import { model, hasKey, CATEGORIES, todayISO } from './_lib.js'
+import { visionModel, hasKey, CATEGORIES, todayISO } from './_lib.js'
 
 const receiptSchema = z.object({
   merchant: z.string().describe('Store or merchant name'),
@@ -33,7 +33,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
   if (!hasKey()) {
     res.status(503).json({
-      error: 'AI is not configured. Set ANTHROPIC_API_KEY to enable receipt scanning.',
+      error: 'AI is not configured. Set DASHSCOPE_API_KEY to enable receipt scanning.',
     })
     return
   }
@@ -46,7 +46,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
 
     const { object } = await generateObject({
-      model: model(),
+      model: visionModel(),
       schema: receiptSchema,
       messages: [
         {

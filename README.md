@@ -64,53 +64,75 @@ npm run preview  # preview the production build locally
 
 ### Enabling Scan + Voice (the AI features)
 
-The scan and voice features call serverless functions in `api/`, which need an
-Anthropic API key. They run on Vercel (or locally via the Vercel CLI):
+The scan and voice features call serverless functions in `api/`, which use
+**Alibaba DashScope (Tongyi Qwen)** — a domestic provider that works from
+mainland China. You need a `DASHSCOPE_API_KEY`.
 
 ```bash
-cp .env.example .env.local     # then paste your ANTHROPIC_API_KEY
+cp .env.example .env.local     # then paste your DASHSCOPE_API_KEY
 npm i -g vercel
 vercel dev                     # serves the app AND the /api functions
 ```
 
-Deploy with `vercel` (or connect the repo in the Vercel dashboard) and set
-`ANTHROPIC_API_KEY` in the project's Environment Variables. Plain `npm run dev`
-still works for everything except the AI endpoints — those will show a friendly
-"AI not configured" message.
+Get a key from the [DashScope / 百炼 console](https://dashscope.console.aliyun.com/).
+Receipts use `qwen-vl-max` (vision); voice/typed notes use `qwen-plus`. Both are
+overridable via `AI_VISION_MODEL` / `AI_TEXT_MODEL`. Because the endpoint is
+OpenAI-compatible, you can point `AI_BASE_URL` at another domestic provider
+(Zhipu GLM, Kimi, Doubao) and just change the model names.
 
-> Note: voice dictation uses the browser's Web Speech API for speech-to-text
-> (best support in Chrome and Safari); the transcript is then parsed by Claude.
-> If the API isn't available, the Speak tab falls back to a text field.
+Plain `npm run dev` still works for everything except the AI endpoints — those
+show a friendly "AI not configured" message.
+
+> **Voice in China:** browser dictation (Web Speech API) routes through Google
+> and won't work on the mainland, so the Speak tab automatically falls back to a
+> text box — you type "午饭花了 25 块" and Qwen turns it into an entry. A native
+> domestic speech-to-text (iFlytek / Aliyun ASR) can be wired in later.
+
+### Cloud sync (optional)
+
+By default all data lives in your browser (`localStorage`) — nothing is sent to
+any server except the receipt image / text you explicitly scan. To sync across
+devices, create a **LeanCloud (国内版)** app and set the `VITE_LEANCLOUD_*`
+values in `.env.local`. When present, Margin signs in anonymously and keeps your
+data in sync (last-write-wins); when absent, it stays fully local.
+
+> Hosting note: a China-hosted domain needs ICP 备案. Vercel works from the
+> mainland without 备案 but can be slower; for production you may prefer 腾讯云 /
+> 阿里云 static hosting + serverless functions.
 
 ## Project structure
 
 ```
-api/                 # Vercel serverless functions (AI)
-  _lib.ts            # shared model config + categories
-  receipt.ts         # POST image  → structured receipt (Claude vision)
-  voice.ts           # POST transcript → structured expense (Claude)
+api/                 # Vercel serverless functions (AI, via Qwen/DashScope)
+  _lib.ts            # OpenAI-compatible provider + model + categories
+  receipt.ts         # POST image  → structured receipt (qwen-vl-max)
+  voice.ts           # POST transcript → structured expense (qwen-plus)
 src/
   lib/
-    types.ts          # domain types (Expense, Settings, AppState)
+    types.ts          # domain types (Expense, Settings, Profile, AppState)
     receipt.ts        # receipt + draft shapes, receiptSummary
     ai.ts             # client calls to /api/receipt and /api/voice
     useSpeech.ts      # Web Speech API dictation hook
     storage.ts        # localStorage load/save + id helpers
+    sync.ts           # optional LeanCloud cloud adapter (env-gated)
+    useSync.ts        # pull-on-load + debounced push hook
     budget.ts         # month math, budget summary, reminder logic
     format.ts         # money / date formatting helpers
     categories.ts     # the fixed category list
     categoryColors.ts # earthy dot palette
+    currencies.ts     # currency options (CNY first)
+    image.ts          # avatar resize/crop to a small data URL
     theme.ts          # light / dark / system theme handling
   components/
     BudgetCard.tsx     # the serif "left to spend" hero + reminder
     EntrySection.tsx   # Type / Scan / Speak segmented control
     ExpenseForm.tsx    # reusable editable expense form
     ScanPanel.tsx      # receipt capture → scan → confirm
-    VoicePanel.tsx     # dictation → analyze → confirm
+    VoicePanel.tsx     # dictation / typing → analyze → confirm
     DraftHeader.tsx    # merchant / items readout above a draft
     ExpenseList.tsx    # this month's ledger rows
-    SettingsDialog.tsx # budget / currency / warn threshold / theme
-  App.tsx         # state, persistence, and layout
+    SettingsPage.tsx   # profile, budget, currency, theme, sync, data
+  App.tsx         # state, persistence, sync, routing
   main.tsx        # React entry point
   styles.css      # the ledger design system
 ```

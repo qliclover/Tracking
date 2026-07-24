@@ -35,13 +35,23 @@ export interface Settings {
   warnThreshold: number
 }
 
+export interface Profile {
+  /** Display name shown in the header / settings. */
+  name?: string
+  /** Avatar as a small data-URL (resized on upload). */
+  avatar?: string
+}
+
 export interface AppState {
   settings: Settings
   expenses: Expense[]
+  profile: Profile
+  /** ms timestamp of the last change — used for last-write-wins cloud sync. */
+  updatedAt: number
 }
 
 export const DEFAULT_SETTINGS: Settings = {
-  monthlyBudget: 1000,
-  currency: '$',
+  monthlyBudget: 2000,
+  currency: '¥',
   warnThreshold: 0.2,
 }
