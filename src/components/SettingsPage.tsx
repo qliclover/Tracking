@@ -1,11 +1,9 @@
-import { useRef, useState } from 'react'
+import { ReactNode } from 'react'
 import { Category, Profile, Recurring, Settings } from '../lib/types'
 import { Theme } from '../lib/theme'
-import { CURRENCIES } from '../lib/currencies'
-import { fileToAvatar } from '../lib/image'
-import { useT, Lang } from '../lib/i18n'
-import { RecurringBills } from './RecurringBills'
-import { SyncPanel, SyncProp } from './SyncPanel'
+import { money } from '../lib/format'
+import { useT } from '../lib/i18n'
+import { SyncProp } from './SyncPanel'
 
 interface Props {
   settings: Settings
@@ -14,24 +12,39 @@ interface Props {
   recurring: Recurring[]
   theme: Theme
   sync: SyncProp
-  onSettings: (s: Settings) => void
-  onProfile: (p: Profile) => void
+  onOpenProfile: () => void
+  onOpenBudget: () => void
   onOpenCategories: () => void
-  onAddRecurring: (input: Omit<Recurring, 'id' | 'createdAt'>) => void
-  onUpdateRecurring: (id: string, patch: Partial<Recurring>) => void
-  onDeleteRecurring: (id: string) => void
-  onTheme: (t: Theme) => void
-  onExport: () => void
-  onImport: (file: File) => void
-  onClear: () => void
+  onOpenFixedBills: () => void
+  onOpenAppearance: () => void
+  onOpenSync: () => void
+  onOpenData: () => void
   onBack: () => void
 }
 
-const THEMES: { key: Theme; tk: string }[] = [
-  { key: 'system', tk: 'theme_system' },
-  { key: 'light', tk: 'theme_light' },
-  { key: 'dark', tk: 'theme_dark' },
-]
+const THEME_TK: Record<Theme, string> = {
+  system: 'theme_system',
+  light: 'theme_light',
+  dark: 'theme_dark',
+}
+
+function NavRow({ title, subtitle, avatar, onClick }: { title: string; subtitle?: string; avatar?: ReactNode; onClick: () => void }) {
+  return (
+    <button
+      type="button"
+      className="row"
+      style={{ width: '100%', background: 'none', border: 'none', textAlign: 'left', cursor: 'pointer', padding: '10px 0' }}
+      onClick={onClick}
+    >
+      {avatar}
+      <div className="r-text">
+        <div className="r-title" style={{ fontSize: 15 }}>{title}</div>
+        {subtitle && <div className="r-sub">{subtitle}</div>}
+      </div>
+      <span className="muted" style={{ fontSize: 18 }}>›</span>
+    </button>
+  )
+}
 
 export function SettingsPage({
   settings,
@@ -40,55 +53,23 @@ export function SettingsPage({
   recurring,
   theme,
   sync,
-  onSettings,
-  onProfile,
+  onOpenProfile,
+  onOpenBudget,
   onOpenCategories,
-  onAddRecurring,
-  onUpdateRecurring,
-  onDeleteRecurring,
-  onTheme,
-  onExport,
-  onImport,
-  onClear,
+  onOpenFixedBills,
+  onOpenAppearance,
+  onOpenSync,
+  onOpenData,
   onBack,
 }: Props) {
   const t = useT()
-  const [budget, setBudget] = useState(String(settings.monthlyBudget))
-  const [name, setName] = useState(profile.name ?? '')
-  const [warnPct, setWarnPct] = useState(String(Math.round(settings.warnThreshold * 100)))
-  const [resetDay, setResetDay] = useState(String(settings.resetDay))
-  const avatarInput = useRef<HTMLInputElement>(null)
-  const importInput = useRef<HTMLInputElement>(null)
-
-  function commitBudget() {
-    const b = Number(budget)
-    if (Number.isFinite(b) && b >= 0) onSettings({ ...settings, monthlyBudget: Math.round(b * 100) / 100 })
-  }
-  function commitWarn() {
-    const w = Number(warnPct)
-    if (Number.isFinite(w)) onSettings({ ...settings, warnThreshold: Math.min(0.9, Math.max(0, w / 100)) })
-  }
-  function commitResetDay() {
-    const d = Number(resetDay)
-    const clamped = Number.isFinite(d) ? Math.min(31, Math.max(1, Math.round(d))) : settings.resetDay
-    setResetDay(String(clamped))
-    onSettings({ ...settings, resetDay: clamped })
-  }
-  function commitName() {
-    onProfile({ ...profile, name: name.trim() || undefined })
-  }
-
-  async function pickAvatar(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0]
-    if (!file) return
-    try {
-      onProfile({ ...profile, avatar: await fileToAvatar(file) })
-    } catch {
-      /* ignore */
-    }
-  }
-
   const initial = (profile.name?.trim()?.[0] || '余').toUpperCase()
+
+  const syncSubtitle = !sync.username
+    ? t('not_signed_in')
+    : sync.status === 'error'
+      ? sync.lastError
+      : `${t(sync.status === 'synced' ? 'sync_synced' : sync.status === 'syncing' ? 'sync_syncing' : 'sync_connecting')} · ${sync.username}`
 
   return (
     <div className="page">
@@ -100,143 +81,44 @@ export function SettingsPage({
         <button className="theme-toggle" onClick={onBack}>{t('done')}</button>
       </header>
 
-      {/* Profile */}
       <section className="setting-block">
-        <div className="profile-row">
-          <button className="avatar avatar-lg" onClick={() => avatarInput.current?.click()}>
-            {profile.avatar ? <img src={profile.avatar} alt="" /> : <span>{initial}</span>}
-          </button>
-          <div className="profile-fields">
-            <div className="field" style={{ marginBottom: 0 }}>
-              <label className="flabel" htmlFor="name">{t('your_name')}</label>
-              <input
-                id="name"
-                placeholder={t('optional')}
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                onBlur={commitName}
-              />
-            </div>
-            <div className="avatar-actions">
-              <button className="link" onClick={() => avatarInput.current?.click()}>
-                {profile.avatar ? t('change_photo') : t('add_photo')}
-              </button>
-              {profile.avatar && (
-                <button className="link danger" onClick={() => onProfile({ ...profile, avatar: undefined })}>
-                  {t('remove')}
-                </button>
-              )}
-            </div>
-          </div>
-        </div>
-        <input ref={avatarInput} type="file" accept="image/*" onChange={pickAvatar} style={{ display: 'none' }} />
-      </section>
-
-      {/* Budget */}
-      <section className="setting-block">
-        <p className="section-head">{t('budget')}</p>
-        <div className="field">
-          <label className="flabel" htmlFor="s-budget">{t('monthly_budget')}</label>
-          <input id="s-budget" inputMode="decimal" value={budget} onChange={(e) => setBudget(e.target.value)} onBlur={commitBudget} />
-        </div>
-
-        <p className="flabel">{t('currency')}</p>
-        <div className="cat-grid">
-          {CURRENCIES.map((c) => (
-            <button
-              key={c.code}
-              className={`cat ${settings.currency === c.symbol ? 'active' : ''}`}
-              onClick={() => onSettings({ ...settings, currency: c.symbol })}
-            >
-              {c.symbol} <span className="muted" style={{ fontSize: 12 }}>{c.code}</span>
-            </button>
-          ))}
-        </div>
-
-        <div className="two">
-          <div className="field">
-            <label className="flabel" htmlFor="s-warn">{t('warn_at')}</label>
-            <input id="s-warn" inputMode="numeric" value={warnPct} onChange={(e) => setWarnPct(e.target.value)} onBlur={commitWarn} />
-          </div>
-          <div className="field">
-            <label className="flabel" htmlFor="s-reset">{t('reset_on_day')}</label>
-            <input id="s-reset" inputMode="numeric" value={resetDay} onChange={(e) => setResetDay(e.target.value)} onBlur={commitResetDay} />
-          </div>
-        </div>
-        <p className="muted" style={{ marginTop: -4 }}>{t('reset_hint')}</p>
-      </section>
-
-      <section className="setting-block">
-        <p className="section-head">{t('manage_categories')}</p>
-        <button
-          className="row"
-          style={{ width: '100%', background: 'none', border: 'none', textAlign: 'left', cursor: 'pointer', padding: '4px 0' }}
-          onClick={onOpenCategories}
-        >
-          <div className="r-text">
-            <div className="r-title" style={{ fontSize: 15 }}>{t('category_count', { v: categories.length })}</div>
-          </div>
-          <span className="muted" style={{ fontSize: 18 }}>›</span>
-        </button>
-      </section>
-
-      <RecurringBills
-        currency={settings.currency}
-        categories={categories}
-        recurring={recurring}
-        onAdd={onAddRecurring}
-        onUpdate={onUpdateRecurring}
-        onDelete={onDeleteRecurring}
-      />
-
-      {/* Appearance + language */}
-      <section className="setting-block">
-        <p className="section-head">{t('appearance')}</p>
-        <div className="theme-row">
-          {THEMES.map((th) => (
-            <button key={th.key} className={`cat ${theme === th.key ? 'active' : ''}`} onClick={() => onTheme(th.key)}>
-              {t(th.tk)}
-            </button>
-          ))}
-        </div>
-
-        <p className="flabel" style={{ marginTop: 18 }}>{t('language')}</p>
-        <div className="theme-row">
-          {(['zh', 'en'] as Lang[]).map((lg) => (
-            <button
-              key={lg}
-              className={`cat ${settings.lang === lg ? 'active' : ''}`}
-              onClick={() => onSettings({ ...settings, lang: lg })}
-            >
-              {lg === 'zh' ? '中文' : 'English'}
-            </button>
-          ))}
-        </div>
-      </section>
-
-      <SyncPanel sync={sync} />
-
-      {/* Data */}
-      <section className="setting-block">
-        <p className="section-head">{t('data')}</p>
-        <div className="two">
-          <button className="btn btn-ghost" onClick={onExport}>{t('export_backup')}</button>
-          <button className="btn btn-ghost" onClick={() => importInput.current?.click()}>{t('import')}</button>
-        </div>
-        <input
-          ref={importInput}
-          type="file"
-          accept="application/json"
-          onChange={(e) => {
-            const f = e.target.files?.[0]
-            if (f) onImport(f)
-            e.target.value = ''
-          }}
-          style={{ display: 'none' }}
+        <NavRow
+          title={profile.name?.trim() || t('your_name')}
+          avatar={
+            <span className="avatar" style={{ width: 40, height: 40, marginRight: 12 }}>
+              {profile.avatar ? <img src={profile.avatar} alt="" /> : <span>{initial}</span>}
+            </span>
+          }
+          onClick={onOpenProfile}
         />
-        <button className="btn btn-ghost danger-btn" style={{ marginTop: 12 }} onClick={onClear}>
-          {t('clear_all')}
-        </button>
+      </section>
+
+      <section className="setting-block">
+        <NavRow
+          title={t('budget')}
+          subtitle={`${money(settings.monthlyBudget, settings.currency)} · ${t('resets_on_day', { v: settings.resetDay })}`}
+          onClick={onOpenBudget}
+        />
+        <NavRow
+          title={t('manage_categories')}
+          subtitle={t('category_count', { v: categories.length })}
+          onClick={onOpenCategories}
+        />
+        <NavRow
+          title={t('fixed_bills')}
+          subtitle={t('bills_count', { v: recurring.length })}
+          onClick={onOpenFixedBills}
+        />
+      </section>
+
+      <section className="setting-block">
+        <NavRow
+          title={t('appearance')}
+          subtitle={`${t(THEME_TK[theme])} · ${settings.lang === 'zh' ? '中文' : 'English'}`}
+          onClick={onOpenAppearance}
+        />
+        <NavRow title={t('sync')} subtitle={syncSubtitle} onClick={onOpenSync} />
+        <NavRow title={t('data')} onClick={onOpenData} />
       </section>
 
       <footer className="footer">有余 · {t('tagline')}</footer>

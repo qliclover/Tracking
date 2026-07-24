@@ -158,6 +158,9 @@ const DICT: Record<string, Entry> = {
   category_rename: { zh: '改名', en: 'Rename' },
   category_last_one: { zh: '至少保留一个分类。', en: 'Keep at least one category.' },
   category_count: { zh: '{v} 个分类', en: '{v} categories' },
+  bills_count: { zh: '{v} 个固定账单', en: '{v} fixed bills' },
+  resets_on_day: { zh: '每月 {v} 号重置', en: 'Resets on day {v}' },
+  not_signed_in: { zh: '未登录', en: 'Not signed in' },
   category_hint: {
     zh: '改名会同步更新已记录的账目;删除不会影响历史记录,只是以后选不到了。',
     en: "Renaming updates past entries too; deleting doesn't touch history — it just won't show up as a choice anymore.",

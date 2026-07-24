@@ -17,8 +17,23 @@ import { Insights } from './components/Insights'
 import { SettingsPage } from './components/SettingsPage'
 import { CategoriesPage } from './components/CategoriesPage'
 import { HistoryList } from './components/HistoryPage'
+import { ProfilePage } from './components/ProfilePage'
+import { BudgetPage } from './components/BudgetPage'
+import { FixedBillsPage } from './components/FixedBillsPage'
+import { AppearancePage } from './components/AppearancePage'
+import { SyncSettingsPage } from './components/SyncSettingsPage'
+import { DataPage } from './components/DataPage'
 
-type View = 'home' | 'settings' | 'categories'
+type View =
+  | 'home'
+  | 'settings'
+  | 'categories'
+  | 'profile'
+  | 'budget'
+  | 'fixedbills'
+  | 'appearance'
+  | 'sync'
+  | 'data'
 
 export default function App() {
   const [state, setState] = useState<AppState>(() => loadState())
@@ -230,6 +245,80 @@ export default function App() {
     )
   }
 
+  if (view === 'profile') {
+    return (
+      <LangProvider lang={lang}>
+      <div className="app">
+        <ProfilePage profile={state.profile} onProfile={saveProfile} onBack={() => setView('settings')} />
+      </div>
+      </LangProvider>
+    )
+  }
+
+  if (view === 'budget') {
+    return (
+      <LangProvider lang={lang}>
+      <div className="app">
+        <BudgetPage settings={state.settings} onSettings={saveSettings} onBack={() => setView('settings')} />
+      </div>
+      </LangProvider>
+    )
+  }
+
+  if (view === 'fixedbills') {
+    return (
+      <LangProvider lang={lang}>
+      <div className="app">
+        <FixedBillsPage
+          currency={state.settings.currency}
+          categories={state.categories}
+          recurring={state.recurring}
+          onAdd={addRecurring}
+          onUpdate={updateRecurring}
+          onDelete={deleteRecurring}
+          onBack={() => setView('settings')}
+        />
+      </div>
+      </LangProvider>
+    )
+  }
+
+  if (view === 'appearance') {
+    return (
+      <LangProvider lang={lang}>
+      <div className="app">
+        <AppearancePage
+          settings={state.settings}
+          theme={theme}
+          onSettings={saveSettings}
+          onTheme={setTheme}
+          onBack={() => setView('settings')}
+        />
+      </div>
+      </LangProvider>
+    )
+  }
+
+  if (view === 'sync') {
+    return (
+      <LangProvider lang={lang}>
+      <div className="app">
+        <SyncSettingsPage sync={sync} onBack={() => setView('settings')} />
+      </div>
+      </LangProvider>
+    )
+  }
+
+  if (view === 'data') {
+    return (
+      <LangProvider lang={lang}>
+      <div className="app">
+        <DataPage onExport={exportBackup} onImport={importBackup} onClear={clearAll} onBack={() => setView('settings')} />
+      </div>
+      </LangProvider>
+    )
+  }
+
   if (view === 'settings') {
     return (
       <LangProvider lang={lang}>
@@ -241,16 +330,13 @@ export default function App() {
           recurring={state.recurring}
           theme={theme}
           sync={sync}
-          onSettings={saveSettings}
-          onProfile={saveProfile}
+          onOpenProfile={() => setView('profile')}
+          onOpenBudget={() => setView('budget')}
           onOpenCategories={() => setView('categories')}
-          onAddRecurring={addRecurring}
-          onUpdateRecurring={updateRecurring}
-          onDeleteRecurring={deleteRecurring}
-          onTheme={setTheme}
-          onExport={exportBackup}
-          onImport={importBackup}
-          onClear={clearAll}
+          onOpenFixedBills={() => setView('fixedbills')}
+          onOpenAppearance={() => setView('appearance')}
+          onOpenSync={() => setView('sync')}
+          onOpenData={() => setView('data')}
           onBack={() => setView('home')}
         />
       </div>
