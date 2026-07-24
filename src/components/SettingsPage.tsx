@@ -3,9 +3,9 @@ import { Category, Profile, Recurring, Settings } from '../lib/types'
 import { Theme } from '../lib/theme'
 import { CURRENCIES } from '../lib/currencies'
 import { fileToAvatar } from '../lib/image'
-import { SyncStatus } from '../lib/useSync'
 import { useT, Lang } from '../lib/i18n'
 import { RecurringBills } from './RecurringBills'
+import { SyncPanel, SyncProp } from './SyncPanel'
 
 interface Props {
   settings: Settings
@@ -13,7 +13,7 @@ interface Props {
   categories: Category[]
   recurring: Recurring[]
   theme: Theme
-  sync: { status: SyncStatus; configured: boolean; syncNow: () => void; lastError: string }
+  sync: SyncProp
   onSettings: (s: Settings) => void
   onProfile: (p: Profile) => void
   onOpenCategories: () => void
@@ -32,14 +32,6 @@ const THEMES: { key: Theme; tk: string }[] = [
   { key: 'light', tk: 'theme_light' },
   { key: 'dark', tk: 'theme_dark' },
 ]
-
-const SYNC_TK: Record<SyncStatus, string> = {
-  off: 'sync_off',
-  connecting: 'sync_connecting',
-  syncing: 'sync_syncing',
-  synced: 'sync_synced',
-  error: 'sync_error',
-}
 
 export function SettingsPage({
   settings,
@@ -222,23 +214,7 @@ export function SettingsPage({
         </div>
       </section>
 
-      {/* Sync */}
-      <section className="setting-block">
-        <p className="section-head">{t('sync')}</p>
-        <div className="row" style={{ borderBottom: 'none', padding: '4px 0' }}>
-          <div className="r-text">
-            <div className="r-title" style={{ fontSize: 15 }}>{t(SYNC_TK[sync.status])}</div>
-            <div className="r-sub">
-              {sync.configured
-                ? sync.status === 'error'
-                  ? sync.lastError
-                  : t('sync_desc_on')
-                : t('sync_desc_off')}
-            </div>
-          </div>
-          {sync.configured && <button className="link" onClick={sync.syncNow}>{t('sync_now')}</button>}
-        </div>
-      </section>
+      <SyncPanel sync={sync} />
 
       {/* Data */}
       <section className="setting-block">

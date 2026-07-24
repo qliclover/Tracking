@@ -4,9 +4,9 @@ import { AppState } from './types'
  * Optional cloud sync via LeanCloud (国内版). Entirely gated by env vars — when
  * they're absent the app is 100% local and none of this code runs.
  *
- * Strategy: anonymous login gives each user an account; the whole AppState is
+ * Strategy: a real email+password account (not anonymous — anonymous logins
+ * are per-device and can't be reunited across devices). The whole AppState is
  * stored as one JSON document per user. Sync is last-write-wins on updatedAt.
- * Deliberately simple — good enough for a single person across their devices.
  */
 
 const env = {
@@ -24,28 +24,64 @@ export function isCloudConfigured(): boolean {
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 let AV: any = null
-let ready = false
+let inited = false
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 async function ensure(): Promise<any> {
-  if (ready) return AV
   if (!isCloudConfigured()) throw new Error('Cloud sync is not configured.')
+  if (inited) return AV
   const mod = await import('leancloud-storage')
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   AV = (mod as any).default ?? mod
   AV.init({ appId: env.appId, appKey: env.appKey, serverURL: env.serverURL || undefined })
-  if (!AV.User.current()) {
-    await AV.User.loginAnonymously()
-  }
-  ready = true
+  inited = true
   return AV
+}
+
+export async function isLoggedIn(): Promise<boolean> {
+  const av = await ensure()
+  return Boolean(av.User.current())
+}
+
+export async function currentEmail(): Promise<string | null> {
+  const av = await ensure()
+  return av.User.current()?.getEmail() ?? av.User.current()?.getUsername() ?? null
+}
+
+export async function signUp(email: string, password: string): Promise<void> {
+  const av = await ensure()
+  const user = new av.User()
+  user.setUsername(email)
+  user.setEmail(email)
+  user.setPassword(password)
+  await user.signUp()
+  localStorage.removeItem(OBJ_KEY)
+}
+
+export async function logIn(email: string, password: string): Promise<void> {
+  const av = await ensure()
+  await av.User.logIn(email, password)
+  localStorage.removeItem(OBJ_KEY)
+}
+
+export async function logOut(): Promise<void> {
+  const av = await ensure()
+  await av.User.logOut()
+  localStorage.removeItem(OBJ_KEY)
+}
+
+export async function requestPasswordReset(email: string): Promise<void> {
+  const av = await ensure()
+  await av.User.requestPasswordReset(email)
 }
 
 /** Fetch the remote state, or null if none exists yet. */
 export async function pull(): Promise<AppState | null> {
   const av = await ensure()
+  const user = av.User.current()
+  if (!user) return null
   const query = new av.Query(CLASS)
-  query.equalTo('owner', av.User.current())
+  query.equalTo('owner', user)
   const obj = await query.first()
   if (!obj) return null
   localStorage.setItem(OBJ_KEY, obj.id)
@@ -60,6 +96,7 @@ export async function pull(): Promise<AppState | null> {
 export async function push(state: AppState): Promise<void> {
   const av = await ensure()
   const user = av.User.current()
+  if (!user) throw new Error('Not logged in.')
   const id = localStorage.getItem(OBJ_KEY)
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   let obj: any
