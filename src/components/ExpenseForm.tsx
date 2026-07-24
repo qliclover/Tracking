@@ -3,11 +3,12 @@ import { ExpenseDraft } from '../lib/receipt'
 import { todayISO } from '../lib/format'
 import { categoryColor } from '../lib/categoryColors'
 import { QUICK_CATEGORIES } from '../lib/categories'
+import { useT, categoryLabel, useLang } from '../lib/i18n'
 
 interface Props {
   currency: string
   initial?: Partial<ExpenseDraft>
-  submitLabel?: string
+  submitKey?: string
   onSubmit: (draft: ExpenseDraft) => void
   onCancel?: () => void
   header?: ReactNode
@@ -16,11 +17,13 @@ interface Props {
 export function ExpenseForm({
   currency,
   initial,
-  submitLabel = 'Record it',
+  submitKey = 'record_it',
   onSubmit,
   onCancel,
   header,
 }: Props) {
+  const t = useT()
+  const lang = useLang()
   const [amount, setAmount] = useState(initial?.amount ? String(initial.amount) : '')
   const [category, setCategory] = useState(initial?.category ?? 'Food')
   const [note, setNote] = useState(initial?.note ?? '')
@@ -31,7 +34,7 @@ export function ExpenseForm({
     e.preventDefault()
     const value = Number(amount)
     if (!Number.isFinite(value) || value <= 0) {
-      setError('Enter an amount greater than 0.')
+      setError(t('err_amount'))
       return
     }
     onSubmit({
@@ -55,7 +58,7 @@ export function ExpenseForm({
       {header}
 
       <div className="field amount">
-        <label className="flabel" htmlFor="amount">Amount</label>
+        <label className="flabel" htmlFor="amount">{t('amount')}</label>
         <div className="amount-wrap">
           <span className="cur">{currency}</span>
           <input
@@ -77,23 +80,23 @@ export function ExpenseForm({
             onClick={() => setCategory(c)}
           >
             <span className="dot" style={{ background: categoryColor(c, QUICK_CATEGORIES) }} />
-            {c}
+            {categoryLabel(c, lang)}
           </button>
         ))}
       </div>
 
       <div className="two">
         <div className="field">
-          <label className="flabel" htmlFor="note">Note</label>
+          <label className="flabel" htmlFor="note">{t('note')}</label>
           <input
             id="note"
-            placeholder="optional"
+            placeholder={t('optional')}
             value={note}
             onChange={(e) => setNote(e.target.value)}
           />
         </div>
         <div className="field">
-          <label className="flabel" htmlFor="date">Date</label>
+          <label className="flabel" htmlFor="date">{t('date')}</label>
           <input id="date" type="date" value={date} onChange={(e) => setDate(e.target.value)} />
         </div>
       </div>
@@ -103,11 +106,11 @@ export function ExpenseForm({
       <div className={onCancel ? 'sheet-actions' : ''}>
         {onCancel && (
           <button type="button" className="btn btn-ghost" onClick={onCancel}>
-            Discard
+            {t('discard')}
           </button>
         )}
         <button type="submit" className="btn btn-primary">
-          {submitLabel}
+          {t(submitKey)}
         </button>
       </div>
     </form>

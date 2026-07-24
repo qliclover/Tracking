@@ -1,13 +1,13 @@
 import { ExpenseDraft } from '../lib/receipt'
 import { money } from '../lib/format'
+import { useT } from '../lib/i18n'
 
 /** Small readout shown above the confirm form for scan/voice drafts. */
 export function DraftHeader({ draft, currency }: { draft: ExpenseDraft; currency: string }) {
+  const t = useT()
   return (
     <div style={{ marginBottom: 18 }}>
-      <p className="section-head">
-        {draft.source === 'scan' ? 'From receipt' : 'From voice'} · check &amp; save
-      </p>
+      <p className="section-head">{draft.source === 'scan' ? t('from_receipt') : t('from_voice')}</p>
       {draft.merchant && (
         <div className="r-title" style={{ marginBottom: 4 }}>
           {draft.merchant}
@@ -32,7 +32,7 @@ export function DraftHeader({ draft, currency }: { draft: ExpenseDraft; currency
           ))}
           {draft.items.length > 6 && (
             <li style={{ fontSize: 12, color: 'var(--faint)' }}>
-              +{draft.items.length - 6} more
+              {t('more_items', { v: draft.items.length - 6 })}
             </li>
           )}
         </ul>

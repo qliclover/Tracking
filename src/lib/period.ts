@@ -58,6 +58,17 @@ export function currentPeriod(resetDay: number, now: Date = new Date()): Period 
   return { start, end, key: iso(start), label }
 }
 
+/** Localized cycle label for the header. */
+export function periodLabel(p: Period, resetDay: number, lang: 'zh' | 'en'): string {
+  const s = p.start
+  const last = new Date(p.end.getTime() - 86400000)
+  if (lang === 'zh') {
+    if (resetDay === 1) return `${s.getFullYear()}年${s.getMonth() + 1}月`
+    return `${s.getMonth() + 1}月${s.getDate()}日 – ${last.getMonth() + 1}月${last.getDate()}日`
+  }
+  return p.label
+}
+
 export function isInPeriod(isoDate: string, p: Period): boolean {
   return isoDate >= iso(p.start) && isoDate < iso(p.end)
 }

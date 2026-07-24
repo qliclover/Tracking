@@ -2,7 +2,8 @@ import { useEffect, useMemo, useState } from 'react'
 import { AppState, Profile, Recurring, Settings } from './lib/types'
 import { ExpenseDraft } from './lib/receipt'
 import { loadState, saveState, makeExpense, emptyState, newId } from './lib/storage'
-import { currentPeriod, expensesForPeriod, daysLeftInPeriod } from './lib/period'
+import { currentPeriod, expensesForPeriod, daysLeftInPeriod, periodLabel } from './lib/period'
+import { LangProvider, translate } from './lib/i18n'
 import { pendingCharges, reservedForPeriod } from './lib/recurring'
 import { summarize } from './lib/budget'
 import { Theme, getTheme, applyTheme } from './lib/theme'
@@ -131,20 +132,24 @@ export default function App() {
             : s.postedRecurring,
         }))
       } catch {
-        alert('That file could not be read as a Margin backup.')
+        alert(translate('import_bad', state.settings.lang))
       }
     }
     reader.readAsText(file)
   }
 
+  const lang = state.settings.lang
+  const t = (k: string, p?: Record<string, string | number>) => translate(k, lang, p)
+
   function clearAll() {
-    if (confirm('Delete everything and reset settings? This cannot be undone.')) {
+    if (confirm(t('confirm_clear'))) {
       update(() => emptyState())
     }
   }
 
   if (view === 'settings') {
     return (
+      <LangProvider lang={lang}>
       <div className="app">
         <SettingsPage
           settings={state.settings}
@@ -164,25 +169,27 @@ export default function App() {
           onBack={() => setView('home')}
         />
       </div>
+      </LangProvider>
     )
   }
 
-  const initial = (state.profile.name?.trim()?.[0] || 'M').toUpperCase()
+  const initial = (state.profile.name?.trim()?.[0] || (lang === 'zh' ? '余' : 'M')).toUpperCase()
 
   return (
+    <LangProvider lang={lang}>
     <div className="app">
       <header className="topbar">
         <div className="brand">
           <Logo size={34} />
           <div className="brand-text">
             <div className="wordmark cjk">有余</div>
-            <span className="month">{period.label}</span>
+            <span className="month">{periodLabel(period, state.settings.resetDay, lang)}</span>
           </div>
         </div>
         <button
           className="avatar avatar-btn"
           onClick={() => setView('settings')}
-          aria-label="Settings"
+          aria-label={t('settings')}
         >
           {state.profile.avatar ? <img src={state.profile.avatar} alt="" /> : <span>{initial}</span>}
         </button>
@@ -200,7 +207,8 @@ export default function App() {
         />
       </main>
 
-      <footer className="footer">Room to spend</footer>
+      <footer className="footer">{t('tagline')}</footer>
     </div>
+    </LangProvider>
   )
 }

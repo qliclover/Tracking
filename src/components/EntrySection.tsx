@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { ExpenseDraft } from '../lib/receipt'
+import { useT } from '../lib/i18n'
 import { ExpenseForm } from './ExpenseForm'
 import { ScanPanel } from './ScanPanel'
 import { VoicePanel } from './VoicePanel'
@@ -11,13 +12,14 @@ interface Props {
   onAdd: (draft: ExpenseDraft) => void
 }
 
-const MODES: { key: Mode; label: string }[] = [
-  { key: 'type', label: 'Type' },
-  { key: 'scan', label: 'Scan' },
-  { key: 'speak', label: 'Speak' },
+const MODES: { key: Mode; tk: string }[] = [
+  { key: 'type', tk: 'mode_type' },
+  { key: 'scan', tk: 'mode_scan' },
+  { key: 'speak', tk: 'mode_speak' },
 ]
 
 export function EntrySection({ currency, onAdd }: Props) {
+  const t = useT()
   const [mode, setMode] = useState<Mode>('type')
 
   return (
@@ -30,7 +32,7 @@ export function EntrySection({ currency, onAdd }: Props) {
             onClick={() => setMode(m.key)}
             type="button"
           >
-            {m.label}
+            {t(m.tk)}
           </button>
         ))}
       </div>

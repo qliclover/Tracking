@@ -34,13 +34,14 @@ export function todayISO(d: Date = new Date()): string {
   ).padStart(2, '0')}`
 }
 
-export function prettyDate(iso: string): string {
+export function prettyDate(iso: string, lang: 'zh' | 'en' = 'en'): string {
   const [y, m, day] = iso.split('-').map(Number)
   if (!y || !m || !day) return iso
   const today = new Date()
   const isToday =
     y === today.getFullYear() && m === today.getMonth() + 1 && day === today.getDate()
-  if (isToday) return 'Today'
+  if (isToday) return lang === 'zh' ? '今天' : 'Today'
+  if (lang === 'zh') return `${m}月${day}日`
   const months = [
     'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
     'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec',

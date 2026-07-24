@@ -1,5 +1,6 @@
 import { BudgetSummary } from '../lib/budget'
 import { money, splitMoney } from '../lib/format'
+import { useT } from '../lib/i18n'
 
 interface Props {
   summary: BudgetSummary
@@ -7,6 +8,7 @@ interface Props {
 }
 
 export function BudgetCard({ summary, currency }: Props) {
+  const t = useT()
   const negative = summary.remaining < 0
   const { int, dec } = splitMoney(summary.remaining)
   const pct = Math.min(100, Math.round(summary.ratio * 100))
@@ -14,7 +16,7 @@ export function BudgetCard({ summary, currency }: Props) {
 
   return (
     <section className={`level-${summary.level}`}>
-      <p className="hero-label">{negative ? 'Over budget' : 'Left to spend'}</p>
+      <p className="hero-label">{negative ? t('over_budget') : t('left_to_spend')}</p>
       <div className={`hero-number ${negative ? 'neg' : ''}`}>
         <span className="cur">{negative ? '−' : ''}{currency}</span>
         <span>{int}</span>
@@ -23,20 +25,20 @@ export function BudgetCard({ summary, currency }: Props) {
 
       <div className="split">
         <div className="col">
-          <span className="lbl">Budget</span>
+          <span className="lbl">{t('budget')}</span>
           <span className="amt">{money(summary.budget, currency)}</span>
         </div>
         <div className="divider" />
         <div className="col">
-          <span className="lbl">Spent</span>
+          <span className="lbl">{t('spent')}</span>
           <span className="amt">{money(summary.spent, currency)}</span>
         </div>
       </div>
 
       {summary.reserved > 0 && (
         <p className="bills-line">
-          <span className="dot bills-dot" /> Fixed bills due later ·{' '}
-          <strong>{money(summary.reserved, currency)}</strong> reserved
+          <span className="dot bills-dot" />{' '}
+          {renderBills(t('bills_reserved', { v: money(summary.reserved, currency) }))}
         </p>
       )}
 
@@ -51,13 +53,11 @@ export function BudgetCard({ summary, currency }: Props) {
           <div className="fill" style={{ width: `${pct}%` }} />
         </div>
         <div className="meter-meta">
-          <span>{pct}% used</span>
+          <span>{t('pct_used', { v: pct })}</span>
           {overPct > 0 ? (
-            <span className="over-tag">{overPct}% over</span>
+            <span className="over-tag">{t('pct_over', { v: overPct })}</span>
           ) : (
-            <span>
-              {summary.daysLeft} day{summary.daysLeft === 1 ? '' : 's'} left
-            </span>
+            <span>{t('days_left', { v: summary.daysLeft })}</span>
           )}
         </div>
       </div>
@@ -67,29 +67,28 @@ export function BudgetCard({ summary, currency }: Props) {
   )
 }
 
-function Reminder({ summary, currency }: Props) {
-  const m = (n: number) => `${currency}${splitMoney(n).int}.${splitMoney(n).dec}`
-  if (summary.budget <= 0) {
-    return <p className="reminder">Set a monthly budget to begin.</p>
-  }
-  if (summary.level === 'over') {
-    return (
-      <p className="reminder">
-        You're <em>{m(summary.remaining)}</em> past the line this month.
-      </p>
-    )
-  }
-  if (summary.level === 'warn') {
-    return (
-      <p className="reminder">
-        Only <em>{m(summary.remaining)}</em> left — about {m(summary.perDay)} a day
-        to finish the month.
-      </p>
-    )
-  }
+// Bold the money amount inside the reserved line.
+function renderBills(text: string) {
+  const m = text.match(/([\d.,¥$€£₩]+)/)
+  if (!m) return text
+  const [before, after] = text.split(m[0])
   return (
-    <p className="reminder">
-      About <em>{m(summary.perDay)}</em> a day keeps you on track.
-    </p>
+    <span>
+      {before}
+      <strong>{m[0]}</strong>
+      {after}
+    </span>
   )
+}
+
+function Reminder({ summary, currency }: Props) {
+  const t = useT()
+  const m = (n: number) => money(n, currency)
+  let text: string
+  if (summary.budget <= 0) text = t('set_budget_first')
+  else if (summary.level === 'over') text = t('rem_over', { v: m(summary.remaining) })
+  else if (summary.level === 'warn')
+    text = t('rem_warn', { v: m(summary.remaining), p: m(summary.perDay) })
+  else text = t('rem_ok', { p: m(summary.perDay) })
+  return <p className="reminder">{text}</p>
 }

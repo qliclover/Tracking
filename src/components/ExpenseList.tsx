@@ -2,6 +2,7 @@ import { Expense } from '../lib/types'
 import { signedMoney, prettyDate } from '../lib/format'
 import { categoryColor } from '../lib/categoryColors'
 import { QUICK_CATEGORIES } from '../lib/categories'
+import { useT, useLang, categoryLabel } from '../lib/i18n'
 
 interface Props {
   expenses: Expense[]
@@ -10,11 +11,14 @@ interface Props {
 }
 
 export function ExpenseList({ expenses, currency, onDelete }: Props) {
+  const t = useT()
+  const lang = useLang()
+
   if (expenses.length === 0) {
     return (
       <section className="empty">
-        <span className="serif">A clean page.</span>
-        <p>Record your first expense above.</p>
+        <span className="serif cjk">{t('empty_title')}</span>
+        <p>{t('empty_sub')}</p>
       </section>
     )
   }
@@ -30,18 +34,18 @@ export function ExpenseList({ expenses, currency, onDelete }: Props) {
                 style={{ background: categoryColor(e.category, QUICK_CATEGORIES) }}
               />
               <div className="r-text">
-                <div className="r-title">{e.note || e.category}</div>
+                <div className="r-title">{e.note || categoryLabel(e.category, lang)}</div>
                 <div className="r-sub">
-                  {e.category} · {prettyDate(e.date)}
+                  {categoryLabel(e.category, lang)} · {prettyDate(e.date, lang)}
                 </div>
               </div>
             </div>
             <span className="r-amt">{signedMoney(-e.amount, currency)}</span>
             <button
               className="r-del"
-              aria-label={`Delete ${e.category} expense`}
+              aria-label={t('remove')}
               onClick={() => onDelete(e.id)}
-              title="Delete"
+              title={t('remove')}
             >
               ×
             </button>

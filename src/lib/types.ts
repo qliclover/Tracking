@@ -49,6 +49,8 @@ export interface Settings {
   warnThreshold: number
   /** Day of the month the budget cycle resets (1-31). Default 1. */
   resetDay: number
+  /** UI language. Default 'zh'. */
+  lang: 'zh' | 'en'
 }
 
 export interface Profile {
@@ -76,4 +78,5 @@ export const DEFAULT_SETTINGS: Settings = {
   currency: '¥',
   warnThreshold: 0.2,
   resetDay: 1,
+  lang: 'zh',
 }

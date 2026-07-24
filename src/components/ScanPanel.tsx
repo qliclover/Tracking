@@ -1,6 +1,7 @@
 import { useRef, useState } from 'react'
 import { ExpenseDraft } from '../lib/receipt'
 import { scanReceipt } from '../lib/ai'
+import { useT } from '../lib/i18n'
 import { ExpenseForm } from './ExpenseForm'
 import { DraftHeader } from './DraftHeader'
 
@@ -10,6 +11,7 @@ interface Props {
 }
 
 export function ScanPanel({ currency, onAdd }: Props) {
+  const t = useT()
   const [image, setImage] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
@@ -35,7 +37,7 @@ export function ScanPanel({ currency, onAdd }: Props) {
     try {
       setDraft(await scanReceipt(image))
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Scan failed.')
+      setError(err instanceof Error ? err.message : t('scan_failed'))
     } finally {
       setLoading(false)
     }
@@ -46,7 +48,7 @@ export function ScanPanel({ currency, onAdd }: Props) {
       <ExpenseForm
         currency={currency}
         initial={draft}
-        submitLabel="Save expense"
+        submitKey="save_expense"
         header={<DraftHeader draft={draft} currency={currency} />}
         onCancel={() => {
           setDraft(null)
@@ -74,13 +76,13 @@ export function ScanPanel({ currency, onAdd }: Props) {
 
       {image ? (
         <div className="scan-preview" onClick={() => fileRef.current?.click()}>
-          <img src={image} alt="Receipt preview" />
-          <span className="scan-retake">Tap to retake</span>
+          <img src={image} alt="" />
+          <span className="scan-retake">{t('tap_retake')}</span>
         </div>
       ) : (
         <button type="button" className="dropzone" onClick={() => fileRef.current?.click()}>
-          <span className="serif" style={{ fontSize: 26 }}>Snap a receipt</span>
-          <span className="muted">Take a photo or choose an image</span>
+          <span className="serif cjk" style={{ fontSize: 26 }}>{t('snap_receipt')}</span>
+          <span className="muted">{t('snap_hint')}</span>
         </button>
       )}
 
@@ -94,7 +96,7 @@ export function ScanPanel({ currency, onAdd }: Props) {
           onClick={scan}
           disabled={loading}
         >
-          {loading ? 'Reading…' : 'Read receipt'}
+          {loading ? t('reading') : t('read_receipt')}
         </button>
       )}
     </div>

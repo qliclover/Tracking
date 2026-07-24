@@ -4,6 +4,7 @@ import { Theme } from '../lib/theme'
 import { CURRENCIES } from '../lib/currencies'
 import { fileToAvatar } from '../lib/image'
 import { SyncStatus } from '../lib/useSync'
+import { useT, Lang } from '../lib/i18n'
 import { RecurringBills } from './RecurringBills'
 
 interface Props {
@@ -24,14 +25,18 @@ interface Props {
   onBack: () => void
 }
 
-const THEMES: Theme[] = ['system', 'light', 'dark']
+const THEMES: { key: Theme; tk: string }[] = [
+  { key: 'system', tk: 'theme_system' },
+  { key: 'light', tk: 'theme_light' },
+  { key: 'dark', tk: 'theme_dark' },
+]
 
-const SYNC_LABEL: Record<SyncStatus, string> = {
-  off: 'Local only',
-  connecting: 'Connecting…',
-  syncing: 'Syncing…',
-  synced: 'Synced',
-  error: 'Sync error',
+const SYNC_TK: Record<SyncStatus, string> = {
+  off: 'sync_off',
+  connecting: 'sync_connecting',
+  syncing: 'sync_syncing',
+  synced: 'sync_synced',
+  error: 'sync_error',
 }
 
 export function SettingsPage({
@@ -51,6 +56,7 @@ export function SettingsPage({
   onClear,
   onBack,
 }: Props) {
+  const t = useT()
   const [budget, setBudget] = useState(String(settings.monthlyBudget))
   const [name, setName] = useState(profile.name ?? '')
   const [warnPct, setWarnPct] = useState(String(Math.round(settings.warnThreshold * 100)))
@@ -80,41 +86,36 @@ export function SettingsPage({
     const file = e.target.files?.[0]
     if (!file) return
     try {
-      const data = await fileToAvatar(file)
-      onProfile({ ...profile, avatar: data })
+      onProfile({ ...profile, avatar: await fileToAvatar(file) })
     } catch {
-      /* ignore bad image */
+      /* ignore */
     }
   }
 
-  const initial = (profile.name?.trim()?.[0] || 'M').toUpperCase()
+  const initial = (profile.name?.trim()?.[0] || '余').toUpperCase()
 
   return (
     <div className="page">
       <header className="topbar">
         <div>
-          <div className="wordmark serif">Settings</div>
+          <div className="wordmark serif">{t('settings')}</div>
           <span className="month">有余 · Margin</span>
         </div>
-        <button className="theme-toggle" onClick={onBack}>Done</button>
+        <button className="theme-toggle" onClick={onBack}>{t('done')}</button>
       </header>
 
       {/* Profile */}
       <section className="setting-block">
         <div className="profile-row">
-          <button
-            className="avatar avatar-lg"
-            onClick={() => avatarInput.current?.click()}
-            aria-label="Change avatar"
-          >
+          <button className="avatar avatar-lg" onClick={() => avatarInput.current?.click()}>
             {profile.avatar ? <img src={profile.avatar} alt="" /> : <span>{initial}</span>}
           </button>
           <div className="profile-fields">
             <div className="field" style={{ marginBottom: 0 }}>
-              <label className="flabel" htmlFor="name">Your name</label>
+              <label className="flabel" htmlFor="name">{t('your_name')}</label>
               <input
                 id="name"
-                placeholder="optional"
+                placeholder={t('optional')}
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 onBlur={commitName}
@@ -122,40 +123,28 @@ export function SettingsPage({
             </div>
             <div className="avatar-actions">
               <button className="link" onClick={() => avatarInput.current?.click()}>
-                {profile.avatar ? 'Change photo' : 'Add photo'}
+                {profile.avatar ? t('change_photo') : t('add_photo')}
               </button>
               {profile.avatar && (
                 <button className="link danger" onClick={() => onProfile({ ...profile, avatar: undefined })}>
-                  Remove
+                  {t('remove')}
                 </button>
               )}
             </div>
           </div>
         </div>
-        <input
-          ref={avatarInput}
-          type="file"
-          accept="image/*"
-          onChange={pickAvatar}
-          style={{ display: 'none' }}
-        />
+        <input ref={avatarInput} type="file" accept="image/*" onChange={pickAvatar} style={{ display: 'none' }} />
       </section>
 
       {/* Budget */}
       <section className="setting-block">
-        <p className="section-head">Budget</p>
+        <p className="section-head">{t('budget')}</p>
         <div className="field">
-          <label className="flabel" htmlFor="s-budget">Monthly budget</label>
-          <input
-            id="s-budget"
-            inputMode="decimal"
-            value={budget}
-            onChange={(e) => setBudget(e.target.value)}
-            onBlur={commitBudget}
-          />
+          <label className="flabel" htmlFor="s-budget">{t('monthly_budget')}</label>
+          <input id="s-budget" inputMode="decimal" value={budget} onChange={(e) => setBudget(e.target.value)} onBlur={commitBudget} />
         </div>
 
-        <p className="flabel">Currency</p>
+        <p className="flabel">{t('currency')}</p>
         <div className="cat-grid">
           {CURRENCIES.map((c) => (
             <button
@@ -170,29 +159,15 @@ export function SettingsPage({
 
         <div className="two">
           <div className="field">
-            <label className="flabel" htmlFor="s-warn">Warn at % left</label>
-            <input
-              id="s-warn"
-              inputMode="numeric"
-              value={warnPct}
-              onChange={(e) => setWarnPct(e.target.value)}
-              onBlur={commitWarn}
-            />
+            <label className="flabel" htmlFor="s-warn">{t('warn_at')}</label>
+            <input id="s-warn" inputMode="numeric" value={warnPct} onChange={(e) => setWarnPct(e.target.value)} onBlur={commitWarn} />
           </div>
           <div className="field">
-            <label className="flabel" htmlFor="s-reset">Cycle resets on day</label>
-            <input
-              id="s-reset"
-              inputMode="numeric"
-              value={resetDay}
-              onChange={(e) => setResetDay(e.target.value)}
-              onBlur={commitResetDay}
-            />
+            <label className="flabel" htmlFor="s-reset">{t('reset_on_day')}</label>
+            <input id="s-reset" inputMode="numeric" value={resetDay} onChange={(e) => setResetDay(e.target.value)} onBlur={commitResetDay} />
           </div>
         </div>
-        <p className="muted" style={{ marginTop: -4 }}>
-          Set this to your payday (e.g. 15) and each month runs 15th → 14th.
-        </p>
+        <p className="muted" style={{ marginTop: -4 }}>{t('reset_hint')}</p>
       </section>
 
       <RecurringBills
@@ -203,13 +178,26 @@ export function SettingsPage({
         onDelete={onDeleteRecurring}
       />
 
-      {/* Appearance */}
+      {/* Appearance + language */}
       <section className="setting-block">
-        <p className="section-head">Appearance</p>
+        <p className="section-head">{t('appearance')}</p>
         <div className="theme-row">
-          {THEMES.map((t) => (
-            <button key={t} className={`cat ${theme === t ? 'active' : ''}`} onClick={() => onTheme(t)}>
-              {t[0].toUpperCase() + t.slice(1)}
+          {THEMES.map((th) => (
+            <button key={th.key} className={`cat ${theme === th.key ? 'active' : ''}`} onClick={() => onTheme(th.key)}>
+              {t(th.tk)}
+            </button>
+          ))}
+        </div>
+
+        <p className="flabel" style={{ marginTop: 18 }}>{t('language')}</p>
+        <div className="theme-row">
+          {(['zh', 'en'] as Lang[]).map((lg) => (
+            <button
+              key={lg}
+              className={`cat ${settings.lang === lg ? 'active' : ''}`}
+              onClick={() => onSettings({ ...settings, lang: lg })}
+            >
+              {lg === 'zh' ? '中文' : 'English'}
             </button>
           ))}
         </div>
@@ -217,32 +205,28 @@ export function SettingsPage({
 
       {/* Sync */}
       <section className="setting-block">
-        <p className="section-head">Sync</p>
+        <p className="section-head">{t('sync')}</p>
         <div className="row" style={{ borderBottom: 'none', padding: '4px 0' }}>
           <div className="r-text">
-            <div className="r-title" style={{ fontSize: 15 }}>{SYNC_LABEL[sync.status]}</div>
+            <div className="r-title" style={{ fontSize: 15 }}>{t(SYNC_TK[sync.status])}</div>
             <div className="r-sub">
               {sync.configured
                 ? sync.status === 'error'
                   ? sync.lastError
-                  : 'Synced across your devices via LeanCloud.'
-                : 'Add LeanCloud keys to sync across devices.'}
+                  : t('sync_desc_on')
+                : t('sync_desc_off')}
             </div>
           </div>
-          {sync.configured && (
-            <button className="link" onClick={sync.syncNow}>Sync now</button>
-          )}
+          {sync.configured && <button className="link" onClick={sync.syncNow}>{t('sync_now')}</button>}
         </div>
       </section>
 
       {/* Data */}
       <section className="setting-block">
-        <p className="section-head">Data</p>
+        <p className="section-head">{t('data')}</p>
         <div className="two">
-          <button className="btn btn-ghost" onClick={onExport}>Export backup</button>
-          <button className="btn btn-ghost" onClick={() => importInput.current?.click()}>
-            Import
-          </button>
+          <button className="btn btn-ghost" onClick={onExport}>{t('export_backup')}</button>
+          <button className="btn btn-ghost" onClick={() => importInput.current?.click()}>{t('import')}</button>
         </div>
         <input
           ref={importInput}
@@ -255,16 +239,12 @@ export function SettingsPage({
           }}
           style={{ display: 'none' }}
         />
-        <button
-          className="btn btn-ghost danger-btn"
-          style={{ marginTop: 12 }}
-          onClick={onClear}
-        >
-          Clear all data
+        <button className="btn btn-ghost danger-btn" style={{ marginTop: 12 }} onClick={onClear}>
+          {t('clear_all')}
         </button>
       </section>
 
-      <footer className="footer">Margin · Room to spend</footer>
+      <footer className="footer">有余 · {t('tagline')}</footer>
     </div>
   )
 }

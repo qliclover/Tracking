@@ -29,6 +29,8 @@ one running total, and one clear answer to "can I afford this right now?"
   remaining balance so "left to spend" stays honest.
 - **Custom cycle** — the budget doesn't have to reset on the 1st. Set your
   payday (e.g. the 15th) and each cycle runs 15th → 14th.
+- **中文 / English** — the whole UI is bilingual and defaults to Chinese;
+  switch anytime in Settings.
 - **Scan a receipt** — snap a photo and an AI vision model (Claude) reads the
   merchant, line items, tax, tip, and total, then drops it into an editable
   draft you confirm in one tap.

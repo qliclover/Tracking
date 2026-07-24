@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { ExpenseDraft } from '../lib/receipt'
 import { analyzeVoice } from '../lib/ai'
 import { useSpeech } from '../lib/useSpeech'
+import { useT, useLang } from '../lib/i18n'
 import { ExpenseForm } from './ExpenseForm'
 import { DraftHeader } from './DraftHeader'
 
@@ -11,7 +12,9 @@ interface Props {
 }
 
 export function VoicePanel({ currency, onAdd }: Props) {
-  const speech = useSpeech()
+  const t = useT()
+  const lang = useLang()
+  const speech = useSpeech(lang === 'zh' ? 'zh-CN' : 'en-US')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [draft, setDraft] = useState<ExpenseDraft | null>(null)
@@ -24,15 +27,15 @@ export function VoicePanel({ currency, onAdd }: Props) {
   const text = useTyping ? typed : speech.transcript
 
   async function analyze() {
-    const t = text.trim()
-    if (!t) return
+    const tr = text.trim()
+    if (!tr) return
     if (speech.listening) speech.stop()
     setLoading(true)
     setError('')
     try {
-      setDraft(await analyzeVoice(t))
+      setDraft(await analyzeVoice(tr))
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Could not analyze.')
+      setError(err instanceof Error ? err.message : t('analyze_failed'))
     } finally {
       setLoading(false)
     }
@@ -43,7 +46,7 @@ export function VoicePanel({ currency, onAdd }: Props) {
       <ExpenseForm
         currency={currency}
         initial={draft}
-        submitLabel="Save expense"
+        submitKey="save_expense"
         header={<DraftHeader draft={draft} currency={currency} />}
         onCancel={() => {
           setDraft(null)
@@ -70,23 +73,21 @@ export function VoicePanel({ currency, onAdd }: Props) {
             onClick={() => (speech.listening ? speech.stop() : speech.start())}
           >
             <span className="mic-dot" />
-            {speech.listening ? 'Listening… tap to stop' : 'Tap and say what you spent'}
+            {speech.listening ? t('listening') : t('tap_speak')}
           </button>
           <p className="transcript">
-            {speech.transcript || (
-              <span className="muted">e.g. “午饭花了 25 块” / “12.40 on lunch today”</span>
-            )}
+            {speech.transcript || <span className="muted">{t('voice_hint')}</span>}
           </p>
           <button type="button" className="link" onClick={() => setTypeMode(true)}>
-            Type instead
+            {t('type_instead')}
           </button>
         </>
       ) : (
         <div className="field">
-          <label className="flabel" htmlFor="typed">Describe the expense</label>
+          <label className="flabel" htmlFor="typed">{t('describe_expense')}</label>
           <input
             id="typed"
-            placeholder="例如：午饭花了 25 块 / 12.40 on lunch today"
+            placeholder={t('describe_ph')}
             value={typed}
             onChange={(e) => setTyped(e.target.value)}
           />
@@ -102,7 +103,7 @@ export function VoicePanel({ currency, onAdd }: Props) {
         onClick={analyze}
         disabled={loading || !text.trim()}
       >
-        {loading ? 'Analyzing…' : 'Analyze'}
+        {loading ? t('analyzing') : t('analyze')}
       </button>
     </div>
   )
