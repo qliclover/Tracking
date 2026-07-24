@@ -1,17 +1,22 @@
 import { useRef, useState } from 'react'
-import { Profile, Settings } from '../lib/types'
+import { Profile, Recurring, Settings } from '../lib/types'
 import { Theme } from '../lib/theme'
 import { CURRENCIES } from '../lib/currencies'
 import { fileToAvatar } from '../lib/image'
 import { SyncStatus } from '../lib/useSync'
+import { RecurringBills } from './RecurringBills'
 
 interface Props {
   settings: Settings
   profile: Profile
+  recurring: Recurring[]
   theme: Theme
   sync: { status: SyncStatus; configured: boolean; syncNow: () => void; lastError: string }
   onSettings: (s: Settings) => void
   onProfile: (p: Profile) => void
+  onAddRecurring: (input: Omit<Recurring, 'id' | 'createdAt'>) => void
+  onUpdateRecurring: (id: string, patch: Partial<Recurring>) => void
+  onDeleteRecurring: (id: string) => void
   onTheme: (t: Theme) => void
   onExport: () => void
   onImport: (file: File) => void
@@ -32,10 +37,14 @@ const SYNC_LABEL: Record<SyncStatus, string> = {
 export function SettingsPage({
   settings,
   profile,
+  recurring,
   theme,
   sync,
   onSettings,
   onProfile,
+  onAddRecurring,
+  onUpdateRecurring,
+  onDeleteRecurring,
   onTheme,
   onExport,
   onImport,
@@ -45,6 +54,7 @@ export function SettingsPage({
   const [budget, setBudget] = useState(String(settings.monthlyBudget))
   const [name, setName] = useState(profile.name ?? '')
   const [warnPct, setWarnPct] = useState(String(Math.round(settings.warnThreshold * 100)))
+  const [resetDay, setResetDay] = useState(String(settings.resetDay))
   const avatarInput = useRef<HTMLInputElement>(null)
   const importInput = useRef<HTMLInputElement>(null)
 
@@ -55,6 +65,12 @@ export function SettingsPage({
   function commitWarn() {
     const w = Number(warnPct)
     if (Number.isFinite(w)) onSettings({ ...settings, warnThreshold: Math.min(0.9, Math.max(0, w / 100)) })
+  }
+  function commitResetDay() {
+    const d = Number(resetDay)
+    const clamped = Number.isFinite(d) ? Math.min(31, Math.max(1, Math.round(d))) : settings.resetDay
+    setResetDay(String(clamped))
+    onSettings({ ...settings, resetDay: clamped })
   }
   function commitName() {
     onProfile({ ...profile, name: name.trim() || undefined })
@@ -152,17 +168,40 @@ export function SettingsPage({
           ))}
         </div>
 
-        <div className="field">
-          <label className="flabel" htmlFor="s-warn">Warn when % of budget is left</label>
-          <input
-            id="s-warn"
-            inputMode="numeric"
-            value={warnPct}
-            onChange={(e) => setWarnPct(e.target.value)}
-            onBlur={commitWarn}
-          />
+        <div className="two">
+          <div className="field">
+            <label className="flabel" htmlFor="s-warn">Warn at % left</label>
+            <input
+              id="s-warn"
+              inputMode="numeric"
+              value={warnPct}
+              onChange={(e) => setWarnPct(e.target.value)}
+              onBlur={commitWarn}
+            />
+          </div>
+          <div className="field">
+            <label className="flabel" htmlFor="s-reset">Cycle resets on day</label>
+            <input
+              id="s-reset"
+              inputMode="numeric"
+              value={resetDay}
+              onChange={(e) => setResetDay(e.target.value)}
+              onBlur={commitResetDay}
+            />
+          </div>
         </div>
+        <p className="muted" style={{ marginTop: -4 }}>
+          Set this to your payday (e.g. 15) and each month runs 15th → 14th.
+        </p>
       </section>
+
+      <RecurringBills
+        currency={settings.currency}
+        recurring={recurring}
+        onAdd={onAddRecurring}
+        onUpdate={onUpdateRecurring}
+        onDelete={onDeleteRecurring}
+      />
 
       {/* Appearance */}
       <section className="setting-block">

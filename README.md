@@ -24,8 +24,11 @@ one running total, and one clear answer to "can I afford this right now?"
   suggested safe daily spend.
 - **Smart reminders** — a friendly line that shifts from "on track" to
   "careful" to "over budget" based on your threshold.
-- **Automatic month view** — the app always shows the current calendar month;
-  past expenses stay in history.
+- **Fixed bills** — add rent, subscriptions, etc.; each is deducted
+  automatically on its day, and upcoming ones are *reserved* against your
+  remaining balance so "left to spend" stays honest.
+- **Custom cycle** — the budget doesn't have to reset on the 1st. Set your
+  payday (e.g. the 15th) and each cycle runs 15th → 14th.
 - **Scan a receipt** — snap a photo and an AI vision model (Claude) reads the
   merchant, line items, tax, tip, and total, then drops it into an editable
   draft you confirm in one tap.
@@ -139,11 +142,11 @@ src/
 
 ## Roadmap ideas
 
-- Recurring/scheduled expenses (subscriptions, rent) auto-deducted each month.
+- A minimal stats view (spend-by-category, a daily sparkline).
 - Real push notifications for the "you're close to your limit" reminder.
-- Categories with per-category caps and simple charts.
-- Optional cloud sync so the same budget follows you across devices.
-- Export to CSV.
+- Per-category caps.
+- Native domestic speech-to-text for the Speak tab.
+- Export to CSV, and carry-over of leftover budget into the next cycle.
 
 ## License
 

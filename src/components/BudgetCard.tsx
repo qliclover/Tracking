@@ -33,6 +33,13 @@ export function BudgetCard({ summary, currency }: Props) {
         </div>
       </div>
 
+      {summary.reserved > 0 && (
+        <p className="bills-line">
+          <span className="dot bills-dot" /> Fixed bills due later ·{' '}
+          <strong>{money(summary.reserved, currency)}</strong> reserved
+        </p>
+      )}
+
       <div className="meter">
         <div
           className="track"

@@ -204,6 +204,23 @@ body {
   line-height: 1;
 }
 
+.bills-line {
+  margin: 14px 0 0;
+  font-size: 13.5px;
+  color: var(--muted);
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+.bills-line strong {
+  color: var(--fg);
+  font-weight: 600;
+}
+.bills-dot {
+  background: var(--danger);
+  opacity: 0.8;
+}
+
 /* progress bar — thin, calm */
 .meter {
   margin-top: 22px;

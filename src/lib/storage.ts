@@ -3,7 +3,14 @@ import { AppState, DEFAULT_SETTINGS, Expense } from './types'
 const STORAGE_KEY = 'margin.appState.v1'
 
 export function emptyState(): AppState {
-  return { settings: DEFAULT_SETTINGS, expenses: [], profile: {}, updatedAt: 0 }
+  return {
+    settings: DEFAULT_SETTINGS,
+    expenses: [],
+    profile: {},
+    recurring: [],
+    postedRecurring: [],
+    updatedAt: 0,
+  }
 }
 
 /** Read the persisted state, tolerating missing/corrupt data. */
@@ -16,6 +23,8 @@ export function loadState(): AppState {
       settings: { ...DEFAULT_SETTINGS, ...(parsed.settings ?? {}) },
       expenses: Array.isArray(parsed.expenses) ? parsed.expenses : [],
       profile: parsed.profile ?? {},
+      recurring: Array.isArray(parsed.recurring) ? parsed.recurring : [],
+      postedRecurring: Array.isArray(parsed.postedRecurring) ? parsed.postedRecurring : [],
       updatedAt: typeof parsed.updatedAt === 'number' ? parsed.updatedAt : 0,
     }
   } catch {

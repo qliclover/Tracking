@@ -16,11 +16,25 @@ export interface Expense {
   /** ms timestamp of creation, used for stable sorting. */
   createdAt: number
   /** How the expense was entered. Defaults to manual. */
-  source?: 'manual' | 'scan' | 'voice'
+  source?: 'manual' | 'scan' | 'voice' | 'recurring'
   /** Merchant name when captured from a receipt or voice note. */
   merchant?: string
   /** Line items when captured from a receipt. */
   items?: { name: string; price: number }[]
+  /** Set when this expense was posted automatically from a recurring bill. */
+  recurringId?: string
+}
+
+/** A fixed monthly bill (rent, subscription) charged on a set day each cycle. */
+export interface Recurring {
+  id: string
+  name: string
+  amount: number
+  category: string
+  /** Day of the month it's charged (1-31, clamped to month length). */
+  dayOfMonth: number
+  active: boolean
+  createdAt: number
 }
 
 export interface Settings {
@@ -33,6 +47,8 @@ export interface Settings {
    * e.g. 0.2 => warn once only 20% of the budget is left.
    */
   warnThreshold: number
+  /** Day of the month the budget cycle resets (1-31). Default 1. */
+  resetDay: number
 }
 
 export interface Profile {
@@ -46,6 +62,11 @@ export interface AppState {
   settings: Settings
   expenses: Expense[]
   profile: Profile
+  /** Fixed recurring bills. */
+  recurring: Recurring[]
+  /** Occurrence keys (`recurringId:YYYY-MM-DD`) already posted, so a deleted
+   *  auto-charge is not re-created on the next load. */
+  postedRecurring: string[]
   /** ms timestamp of the last change — used for last-write-wins cloud sync. */
   updatedAt: number
 }
@@ -54,4 +75,5 @@ export const DEFAULT_SETTINGS: Settings = {
   monthlyBudget: 2000,
   currency: '¥',
   warnThreshold: 0.2,
+  resetDay: 1,
 }

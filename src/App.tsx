@@ -1,9 +1,10 @@
 import { useEffect, useMemo, useState } from 'react'
-import { AppState, Profile, Settings } from './lib/types'
+import { AppState, Profile, Recurring, Settings } from './lib/types'
 import { ExpenseDraft } from './lib/receipt'
-import { loadState, saveState, makeExpense, emptyState } from './lib/storage'
-import { expensesForMonth, monthKey, summarize } from './lib/budget'
-import { monthLabel } from './lib/format'
+import { loadState, saveState, makeExpense, emptyState, newId } from './lib/storage'
+import { currentPeriod, expensesForPeriod, daysLeftInPeriod } from './lib/period'
+import { pendingCharges, reservedForPeriod } from './lib/recurring'
+import { summarize } from './lib/budget'
 import { Theme, getTheme, applyTheme } from './lib/theme'
 import { useSync } from './lib/useSync'
 import { BudgetCard } from './components/BudgetCard'
@@ -28,17 +29,36 @@ export default function App() {
 
   const sync = useSync({ state, onRemote: (remote) => setState(remote) })
 
-  const currentMonth = monthKey()
-  const monthExpenses = useMemo(
-    () => expensesForMonth(state.expenses, currentMonth),
-    [state.expenses, currentMonth],
-  )
-  const summary = useMemo(
-    () => summarize(monthExpenses, state.settings),
-    [monthExpenses, state.settings],
+  const period = useMemo(
+    () => currentPeriod(state.settings.resetDay),
+    [state.settings.resetDay],
   )
 
-  /** Apply a mutation and stamp updatedAt so sync knows it changed. */
+  // Post any due fixed-bill charges into the ledger.
+  useEffect(() => {
+    setState((prev) => {
+      const p = currentPeriod(prev.settings.resetDay)
+      const { expenses, keys } = pendingCharges(prev, p)
+      if (expenses.length === 0) return prev
+      return {
+        ...prev,
+        expenses: [...prev.expenses, ...expenses],
+        postedRecurring: [...prev.postedRecurring, ...keys],
+        updatedAt: Date.now(),
+      }
+    })
+  }, [state.recurring, state.settings.resetDay])
+
+  const periodExpenses = useMemo(
+    () => expensesForPeriod(state.expenses, period),
+    [state.expenses, period],
+  )
+  const reserved = useMemo(() => reservedForPeriod(state, period), [state, period])
+  const summary = useMemo(
+    () => summarize(periodExpenses, state.settings, { daysLeft: daysLeftInPeriod(period), reserved }),
+    [periodExpenses, state.settings, period, reserved],
+  )
+
   function update(mut: (s: AppState) => AppState) {
     setState((prev) => ({ ...mut(prev), updatedAt: Date.now() }))
   }
@@ -68,12 +88,28 @@ export default function App() {
     update((s) => ({ ...s, profile: next }))
   }
 
+  function addRecurring(input: Omit<Recurring, 'id' | 'createdAt'>) {
+    const rec: Recurring = { ...input, id: newId(), createdAt: Date.now() }
+    update((s) => ({ ...s, recurring: [...s.recurring, rec] }))
+  }
+
+  function updateRecurring(id: string, patch: Partial<Recurring>) {
+    update((s) => ({
+      ...s,
+      recurring: s.recurring.map((r) => (r.id === id ? { ...r, ...patch } : r)),
+    }))
+  }
+
+  function deleteRecurring(id: string) {
+    update((s) => ({ ...s, recurring: s.recurring.filter((r) => r.id !== id) }))
+  }
+
   function exportBackup() {
     const blob = new Blob([JSON.stringify(state, null, 2)], { type: 'application/json' })
     const url = URL.createObjectURL(blob)
     const a = document.createElement('a')
     a.href = url
-    a.download = `margin-backup-${currentMonth}.json`
+    a.download = `margin-backup-${period.key}.json`
     a.click()
     URL.revokeObjectURL(url)
   }
@@ -88,6 +124,10 @@ export default function App() {
           settings: { ...s.settings, ...(parsed.settings ?? {}) },
           expenses: Array.isArray(parsed.expenses) ? parsed.expenses : s.expenses,
           profile: parsed.profile ?? s.profile,
+          recurring: Array.isArray(parsed.recurring) ? parsed.recurring : s.recurring,
+          postedRecurring: Array.isArray(parsed.postedRecurring)
+            ? parsed.postedRecurring
+            : s.postedRecurring,
         }))
       } catch {
         alert('That file could not be read as a Margin backup.')
@@ -97,7 +137,7 @@ export default function App() {
   }
 
   function clearAll() {
-    if (confirm('Delete all expenses and reset settings? This cannot be undone.')) {
+    if (confirm('Delete everything and reset settings? This cannot be undone.')) {
       update(() => emptyState())
     }
   }
@@ -108,10 +148,14 @@ export default function App() {
         <SettingsPage
           settings={state.settings}
           profile={state.profile}
+          recurring={state.recurring}
           theme={theme}
           sync={sync}
           onSettings={saveSettings}
           onProfile={saveProfile}
+          onAddRecurring={addRecurring}
+          onUpdateRecurring={updateRecurring}
+          onDeleteRecurring={deleteRecurring}
           onTheme={setTheme}
           onExport={exportBackup}
           onImport={importBackup}
@@ -129,7 +173,7 @@ export default function App() {
       <header className="topbar">
         <div>
           <div className="wordmark serif">Margin</div>
-          <span className="month">{monthLabel(currentMonth)}</span>
+          <span className="month">{period.label}</span>
         </div>
         <button
           className="avatar avatar-btn"
@@ -146,7 +190,7 @@ export default function App() {
         <EntrySection currency={state.settings.currency} onAdd={addExpense} />
         <div className="rule" />
         <ExpenseList
-          expenses={monthExpenses}
+          expenses={periodExpenses}
           currency={state.settings.currency}
           onDelete={deleteExpense}
         />
