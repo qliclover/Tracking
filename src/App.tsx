@@ -16,15 +16,15 @@ import { ExpenseList } from './components/ExpenseList'
 import { Insights } from './components/Insights'
 import { SettingsPage } from './components/SettingsPage'
 import { CategoriesPage } from './components/CategoriesPage'
-import { HistoryPage } from './components/HistoryPage'
+import { HistoryList } from './components/HistoryPage'
 
-type View = 'home' | 'settings' | 'categories' | 'history'
+type View = 'home' | 'settings' | 'categories'
 
 export default function App() {
   const [state, setState] = useState<AppState>(() => loadState())
   const [theme, setTheme] = useState<Theme>(() => getTheme())
   const [view, setView] = useState<View>('home')
-  const [tab, setTab] = useState<'ledger' | 'stats'>('ledger')
+  const [tab, setTab] = useState<'ledger' | 'stats' | 'history'>('ledger')
   const [entryMode, setEntryMode] = useState<EntryMode>('type')
 
   useEffect(() => {
@@ -230,22 +230,6 @@ export default function App() {
     )
   }
 
-  if (view === 'history') {
-    return (
-      <LangProvider lang={lang}>
-      <div className="app">
-        <HistoryPage
-          expenses={state.expenses}
-          categories={state.categories}
-          currency={state.settings.currency}
-          onDelete={deleteExpense}
-          onBack={() => setView('settings')}
-        />
-      </div>
-      </LangProvider>
-    )
-  }
-
   if (view === 'settings') {
     return (
       <LangProvider lang={lang}>
@@ -260,7 +244,6 @@ export default function App() {
           onSettings={saveSettings}
           onProfile={saveProfile}
           onOpenCategories={() => setView('categories')}
-          onOpenHistory={() => setView('history')}
           onAddRecurring={addRecurring}
           onUpdateRecurring={updateRecurring}
           onDeleteRecurring={deleteRecurring}
@@ -321,6 +304,12 @@ export default function App() {
           >
             {t('tab_stats')}
           </button>
+          <button
+            className={`tab ${tab === 'history' ? 'active' : ''}`}
+            onClick={() => setTab('history')}
+          >
+            {t('history')}
+          </button>
         </div>
 
         {tab === 'ledger' ? (
@@ -330,13 +319,20 @@ export default function App() {
             currency={state.settings.currency}
             onDelete={deleteExpense}
           />
-        ) : (
+        ) : tab === 'stats' ? (
           <Insights
             expenses={periodExpenses}
             categories={state.categories}
             period={period}
             currency={state.settings.currency}
             daysElapsed={daysElapsed}
+          />
+        ) : (
+          <HistoryList
+            expenses={state.expenses}
+            categories={state.categories}
+            currency={state.settings.currency}
+            onDelete={deleteExpense}
           />
         )}
       </main>

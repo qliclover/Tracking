@@ -11,10 +11,10 @@ interface Props {
   categories: Category[]
   currency: string
   onDelete: (id: string) => void
-  onBack: () => void
 }
 
-export function HistoryPage({ expenses, categories, currency, onDelete, onBack }: Props) {
+/** All expenses grouped by calendar month, newest first — not filtered to the current cycle. */
+export function HistoryList({ expenses, categories, currency, onDelete }: Props) {
   const t = useT()
   const lang = useLang()
 
@@ -35,56 +35,48 @@ export function HistoryPage({ expenses, categories, currency, onDelete, onBack }
       }))
   }, [expenses])
 
-  return (
-    <div className="page">
-      <header className="topbar">
-        <div>
-          <div className="wordmark serif">{t('history')}</div>
-          <span className="month">有余 · Margin</span>
-        </div>
-        <button className="theme-toggle" onClick={onBack}>{t('done')}</button>
-      </header>
+  if (groups.length === 0) {
+    return (
+      <section className="empty">
+        <p>{t('history_empty')}</p>
+      </section>
+    )
+  }
 
-      {groups.length === 0 ? (
-        <section className="empty">
-          <p>{t('history_empty')}</p>
-        </section>
-      ) : (
-        groups.map((g) => (
-          <section key={g.key} className="setting-block">
-            <div className="row" style={{ borderBottom: 'none', padding: '4px 0 8px' }}>
-              <p className="section-head" style={{ margin: 0 }}>{monthKeyLabel(g.key, lang)}</p>
-              <span className="muted">{money(g.total, currency)}</span>
-            </div>
-            <ul style={{ listStyle: 'none', margin: 0, padding: 0 }}>
-              {g.list.map((e) => (
-                <li key={e.id} className="row">
-                  <div className="r-main">
-                    <span className="dot" style={{ background: categoryColor(e.category, categories) }} />
-                    <div className="r-text">
-                      <div className="r-title">{e.note || categoryDisplay(e.category, lang)}</div>
-                      <div className="r-sub">
-                        {categoryDisplay(e.category, lang)} · {prettyDate(e.date, lang)}
-                      </div>
+  return (
+    <section>
+      {groups.map((g) => (
+        <div key={g.key} style={{ marginBottom: 20 }}>
+          <div className="row" style={{ borderBottom: 'none', padding: '4px 0 8px' }}>
+            <p className="section-head" style={{ margin: 0 }}>{monthKeyLabel(g.key, lang)}</p>
+            <span className="muted">{money(g.total, currency)}</span>
+          </div>
+          <ul style={{ listStyle: 'none', margin: 0, padding: 0 }}>
+            {g.list.map((e) => (
+              <li key={e.id} className="row">
+                <div className="r-main">
+                  <span className="dot" style={{ background: categoryColor(e.category, categories) }} />
+                  <div className="r-text">
+                    <div className="r-title">{e.note || categoryDisplay(e.category, lang)}</div>
+                    <div className="r-sub">
+                      {categoryDisplay(e.category, lang)} · {prettyDate(e.date, lang)}
                     </div>
                   </div>
-                  <span className="r-amt">{signedMoney(-e.amount, currency)}</span>
-                  <button
-                    className="r-del"
-                    aria-label={t('remove')}
-                    onClick={() => onDelete(e.id)}
-                    title={t('remove')}
-                  >
-                    ×
-                  </button>
-                </li>
-              ))}
-            </ul>
-          </section>
-        ))
-      )}
-
-      <footer className="footer">有余 · {t('tagline')}</footer>
-    </div>
+                </div>
+                <span className="r-amt">{signedMoney(-e.amount, currency)}</span>
+                <button
+                  className="r-del"
+                  aria-label={t('remove')}
+                  onClick={() => onDelete(e.id)}
+                  title={t('remove')}
+                >
+                  ×
+                </button>
+              </li>
+            ))}
+          </ul>
+        </div>
+      ))}
+    </section>
   )
 }

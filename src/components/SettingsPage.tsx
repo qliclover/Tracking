@@ -17,7 +17,6 @@ interface Props {
   onSettings: (s: Settings) => void
   onProfile: (p: Profile) => void
   onOpenCategories: () => void
-  onOpenHistory: () => void
   onAddRecurring: (input: Omit<Recurring, 'id' | 'createdAt'>) => void
   onUpdateRecurring: (id: string, patch: Partial<Recurring>) => void
   onDeleteRecurring: (id: string) => void
@@ -44,7 +43,6 @@ export function SettingsPage({
   onSettings,
   onProfile,
   onOpenCategories,
-  onOpenHistory,
   onAddRecurring,
   onUpdateRecurring,
   onDeleteRecurring,
@@ -221,16 +219,6 @@ export function SettingsPage({
       {/* Data */}
       <section className="setting-block">
         <p className="section-head">{t('data')}</p>
-        <button
-          className="row"
-          style={{ width: '100%', background: 'none', border: 'none', textAlign: 'left', cursor: 'pointer', padding: '4px 0' }}
-          onClick={onOpenHistory}
-        >
-          <div className="r-text">
-            <div className="r-title" style={{ fontSize: 15 }}>{t('history')}</div>
-          </div>
-          <span className="muted" style={{ fontSize: 18 }}>›</span>
-        </button>
         <div className="two">
           <button className="btn btn-ghost" onClick={onExport}>{t('export_backup')}</button>
           <button className="btn btn-ghost" onClick={() => importInput.current?.click()}>{t('import')}</button>
