@@ -15,10 +15,8 @@ import { EntrySection, EntryMode } from './components/EntrySection'
 import { ExpenseList } from './components/ExpenseList'
 import { Insights } from './components/Insights'
 import { SettingsPage } from './components/SettingsPage'
-import { CategoriesPage } from './components/CategoriesPage'
 import { HistoryList } from './components/HistoryPage'
 import { ProfilePage } from './components/ProfilePage'
-import { BudgetPage } from './components/BudgetPage'
 import { FixedBillsPage } from './components/FixedBillsPage'
 import { AppearancePage } from './components/AppearancePage'
 import { SyncSettingsPage } from './components/SyncSettingsPage'
@@ -27,9 +25,7 @@ import { DataPage } from './components/DataPage'
 type View =
   | 'home'
   | 'settings'
-  | 'categories'
   | 'profile'
-  | 'budget'
   | 'fixedbills'
   | 'appearance'
   | 'sync'
@@ -229,37 +225,11 @@ export default function App() {
     }
   }
 
-  if (view === 'categories') {
-    return (
-      <LangProvider lang={lang}>
-      <div className="app">
-        <CategoriesPage
-          categories={state.categories}
-          onAdd={addCategory}
-          onRename={renameCategory}
-          onDelete={deleteCategory}
-          onBack={() => setView('settings')}
-        />
-      </div>
-      </LangProvider>
-    )
-  }
-
   if (view === 'profile') {
     return (
       <LangProvider lang={lang}>
       <div className="app">
         <ProfilePage profile={state.profile} onProfile={saveProfile} onBack={() => setView('settings')} />
-      </div>
-      </LangProvider>
-    )
-  }
-
-  if (view === 'budget') {
-    return (
-      <LangProvider lang={lang}>
-      <div className="app">
-        <BudgetPage settings={state.settings} onSettings={saveSettings} onBack={() => setView('settings')} />
       </div>
       </LangProvider>
     )
@@ -330,9 +300,11 @@ export default function App() {
           recurring={state.recurring}
           theme={theme}
           sync={sync}
+          onSettings={saveSettings}
+          onAddCategory={addCategory}
+          onRenameCategory={renameCategory}
+          onDeleteCategory={deleteCategory}
           onOpenProfile={() => setView('profile')}
-          onOpenBudget={() => setView('budget')}
-          onOpenCategories={() => setView('categories')}
           onOpenFixedBills={() => setView('fixedbills')}
           onOpenAppearance={() => setView('appearance')}
           onOpenSync={() => setView('sync')}

@@ -1,9 +1,10 @@
-import { ReactNode } from 'react'
+import { ReactNode, useState } from 'react'
 import { Category, Profile, Recurring, Settings } from '../lib/types'
 import { Theme } from '../lib/theme'
-import { money } from '../lib/format'
+import { CURRENCIES } from '../lib/currencies'
 import { useT } from '../lib/i18n'
 import { SyncProp } from './SyncPanel'
+import { CategoryManager } from './CategoryManager'
 
 interface Props {
   settings: Settings
@@ -12,9 +13,11 @@ interface Props {
   recurring: Recurring[]
   theme: Theme
   sync: SyncProp
+  onSettings: (s: Settings) => void
+  onAddCategory: (name: string) => void
+  onRenameCategory: (oldName: string, newName: string) => void
+  onDeleteCategory: (name: string) => void
   onOpenProfile: () => void
-  onOpenBudget: () => void
-  onOpenCategories: () => void
   onOpenFixedBills: () => void
   onOpenAppearance: () => void
   onOpenSync: () => void
@@ -53,9 +56,11 @@ export function SettingsPage({
   recurring,
   theme,
   sync,
+  onSettings,
+  onAddCategory,
+  onRenameCategory,
+  onDeleteCategory,
   onOpenProfile,
-  onOpenBudget,
-  onOpenCategories,
   onOpenFixedBills,
   onOpenAppearance,
   onOpenSync,
@@ -64,6 +69,25 @@ export function SettingsPage({
 }: Props) {
   const t = useT()
   const initial = (profile.name?.trim()?.[0] || '余').toUpperCase()
+
+  const [budget, setBudget] = useState(String(settings.monthlyBudget))
+  const [warnPct, setWarnPct] = useState(String(Math.round(settings.warnThreshold * 100)))
+  const [resetDay, setResetDay] = useState(String(settings.resetDay))
+
+  function commitBudget() {
+    const b = Number(budget)
+    if (Number.isFinite(b) && b >= 0) onSettings({ ...settings, monthlyBudget: Math.round(b * 100) / 100 })
+  }
+  function commitWarn() {
+    const w = Number(warnPct)
+    if (Number.isFinite(w)) onSettings({ ...settings, warnThreshold: Math.min(0.9, Math.max(0, w / 100)) })
+  }
+  function commitResetDay() {
+    const d = Number(resetDay)
+    const clamped = Number.isFinite(d) ? Math.min(31, Math.max(1, Math.round(d))) : settings.resetDay
+    setResetDay(String(clamped))
+    onSettings({ ...settings, resetDay: clamped })
+  }
 
   const syncSubtitle = !sync.username
     ? t('not_signed_in')
@@ -93,17 +117,44 @@ export function SettingsPage({
         />
       </section>
 
+      {/* Budget — inline */}
       <section className="setting-block">
-        <NavRow
-          title={t('budget')}
-          subtitle={`${money(settings.monthlyBudget, settings.currency)} · ${t('resets_on_day', { v: settings.resetDay })}`}
-          onClick={onOpenBudget}
-        />
-        <NavRow
-          title={t('manage_categories')}
-          subtitle={t('category_count', { v: categories.length })}
-          onClick={onOpenCategories}
-        />
+        <p className="section-head">{t('budget')}</p>
+        <div className="field">
+          <label className="flabel" htmlFor="s-budget">{t('monthly_budget')}</label>
+          <input id="s-budget" inputMode="decimal" value={budget} onChange={(e) => setBudget(e.target.value)} onBlur={commitBudget} />
+        </div>
+
+        <p className="flabel">{t('currency')}</p>
+        <div className="cat-grid">
+          {CURRENCIES.map((c) => (
+            <button
+              key={c.code}
+              className={`cat ${settings.currency === c.symbol ? 'active' : ''}`}
+              onClick={() => onSettings({ ...settings, currency: c.symbol })}
+            >
+              {c.symbol} <span className="muted" style={{ fontSize: 12 }}>{c.code}</span>
+            </button>
+          ))}
+        </div>
+
+        <div className="two">
+          <div className="field">
+            <label className="flabel" htmlFor="s-warn">{t('warn_at')}</label>
+            <input id="s-warn" inputMode="numeric" value={warnPct} onChange={(e) => setWarnPct(e.target.value)} onBlur={commitWarn} />
+          </div>
+          <div className="field">
+            <label className="flabel" htmlFor="s-reset">{t('reset_on_day')}</label>
+            <input id="s-reset" inputMode="numeric" value={resetDay} onChange={(e) => setResetDay(e.target.value)} onBlur={commitResetDay} />
+          </div>
+        </div>
+        <p className="muted" style={{ marginTop: -4 }}>{t('reset_hint')}</p>
+      </section>
+
+      {/* Categories — inline */}
+      <CategoryManager categories={categories} onAdd={onAddCategory} onRename={onRenameCategory} onDelete={onDeleteCategory} />
+
+      <section className="setting-block">
         <NavRow
           title={t('fixed_bills')}
           subtitle={t('bills_count', { v: recurring.length })}
