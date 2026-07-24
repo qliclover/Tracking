@@ -1,7 +1,9 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node'
 import {
   CognitoIdentityProviderClient,
+  ConfirmForgotPasswordCommand,
   ConfirmSignUpCommand,
+  ForgotPasswordCommand,
   InitiateAuthCommand,
   ResendConfirmationCodeCommand,
   SignUpCommand,
@@ -121,6 +123,40 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         return
       }
       res.status(200).json({ accessToken: t.AccessToken, idToken: t.IdToken, refreshToken: t.RefreshToken })
+      return
+    }
+
+    if (action === 'forgot') {
+      if (!username) {
+        res.status(400).json({ error: 'Missing fields.' })
+        return
+      }
+      await client.send(
+        new ForgotPasswordCommand({
+          ClientId: CLIENT_ID,
+          Username: username,
+          SecretHash: secretHash(username),
+        }),
+      )
+      res.status(200).json({ ok: true })
+      return
+    }
+
+    if (action === 'resetPassword') {
+      if (!username || !code || !password) {
+        res.status(400).json({ error: 'Missing fields.' })
+        return
+      }
+      await client.send(
+        new ConfirmForgotPasswordCommand({
+          ClientId: CLIENT_ID,
+          Username: username,
+          ConfirmationCode: code,
+          Password: password,
+          SecretHash: secretHash(username),
+        }),
+      )
+      res.status(200).json({ ok: true })
       return
     }
 

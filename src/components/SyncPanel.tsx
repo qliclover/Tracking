@@ -12,6 +12,8 @@ export interface SyncProp {
   confirm: (username: string, code: string, password: string) => Promise<void>
   resend: (username: string) => Promise<void>
   logout: () => Promise<void>
+  forgot: (username: string) => Promise<void>
+  resetPass: (username: string, code: string, newPassword: string) => Promise<void>
 }
 
 const SYNC_TK: Record<string, string> = {
@@ -21,36 +23,50 @@ const SYNC_TK: Record<string, string> = {
   error: 'sync_error',
 }
 
+type Mode = 'login' | 'signup' | 'confirm' | 'forgot-request' | 'forgot-reset'
+
 export function SyncPanel({ sync }: { sync: SyncProp }) {
   const t = useT()
-  const [mode, setMode] = useState<'login' | 'signup' | 'confirm'>('login')
+  const [mode, setMode] = useState<Mode>('login')
   const [username, setUsername] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [code, setCode] = useState('')
+  const [newPassword, setNewPassword] = useState('')
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
   const [notice, setNotice] = useState('')
 
-  async function submit(e: FormEvent) {
-    e.preventDefault()
+  function reset() {
     setError('')
     setNotice('')
-    if (!username.trim() || !password) return
+  }
+
+  async function submit(e: FormEvent) {
+    e.preventDefault()
+    reset()
     setBusy(true)
     try {
       if (mode === 'login') {
+        if (!username.trim() || !password) return
         await sync.login(username.trim(), password)
       } else if (mode === 'signup') {
+        if (!username.trim() || !password) return
         if (!email.trim()) {
           setError(t('sync_email_required'))
-          setBusy(false)
           return
         }
         await sync.signup(username.trim(), email.trim(), password)
         setMode('confirm')
-      } else {
+      } else if (mode === 'confirm') {
         await sync.confirm(username.trim(), code.trim(), password)
+      } else if (mode === 'forgot-request') {
+        if (!username.trim()) return
+        await sync.forgot(username.trim())
+        setNotice(t('sync_code_sent'))
+        setMode('forgot-reset')
+      } else {
+        await sync.resetPass(username.trim(), code.trim(), newPassword)
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : t('sync_error'))
@@ -60,8 +76,7 @@ export function SyncPanel({ sync }: { sync: SyncProp }) {
   }
 
   async function resend() {
-    setError('')
-    setNotice('')
+    reset()
     setBusy(true)
     try {
       await sync.resend(username.trim())
@@ -79,7 +94,7 @@ export function SyncPanel({ sync }: { sync: SyncProp }) {
         <p className="section-head">{t('sync')}</p>
         <p className="r-sub" style={{ marginBottom: 12 }}>{t('sync_intro')}</p>
         <form onSubmit={submit}>
-          {mode !== 'confirm' && (
+          {(mode === 'login' || mode === 'signup' || mode === 'forgot-request' || mode === 'forgot-reset') && (
             <div className="field">
               <label className="flabel" htmlFor="sync-username">{t('sync_username')}</label>
               <input
@@ -88,6 +103,7 @@ export function SyncPanel({ sync }: { sync: SyncProp }) {
                 autoCorrect="off"
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
+                readOnly={mode === 'forgot-reset'}
               />
             </div>
           )}
@@ -107,7 +123,7 @@ export function SyncPanel({ sync }: { sync: SyncProp }) {
             </div>
           )}
 
-          {mode !== 'confirm' && (
+          {(mode === 'login' || mode === 'signup') && (
             <div className="field">
               <label className="flabel" htmlFor="sync-password">{t('sync_password')}</label>
               <input
@@ -134,26 +150,76 @@ export function SyncPanel({ sync }: { sync: SyncProp }) {
             </>
           )}
 
+          {mode === 'forgot-reset' && (
+            <>
+              <p className="r-sub" style={{ marginBottom: 12 }}>{t('sync_reset_hint')}</p>
+              <div className="field">
+                <label className="flabel" htmlFor="sync-reset-code">{t('sync_code')}</label>
+                <input
+                  id="sync-reset-code"
+                  inputMode="numeric"
+                  value={code}
+                  onChange={(e) => setCode(e.target.value)}
+                />
+              </div>
+              <div className="field">
+                <label className="flabel" htmlFor="sync-new-password">{t('sync_new_password')}</label>
+                <input
+                  id="sync-new-password"
+                  type="password"
+                  value={newPassword}
+                  onChange={(e) => setNewPassword(e.target.value)}
+                />
+              </div>
+            </>
+          )}
+
           {error && <p className="error">{error}</p>}
           {notice && <p className="muted">{notice}</p>}
 
           <div className="two" style={{ marginTop: 12 }}>
-            {mode !== 'confirm' ? (
+            {mode === 'login' && (
               <button
                 type="button"
                 className="btn btn-ghost"
                 disabled={busy}
                 onClick={() => {
-                  setMode(mode === 'login' ? 'signup' : 'login')
-                  setError('')
-                  setNotice('')
+                  setMode('signup')
+                  reset()
                 }}
               >
-                {mode === 'login' ? t('sync_switch_signup') : t('sync_switch_login')}
+                {t('sync_switch_signup')}
               </button>
-            ) : (
+            )}
+            {mode === 'signup' && (
+              <button
+                type="button"
+                className="btn btn-ghost"
+                disabled={busy}
+                onClick={() => {
+                  setMode('login')
+                  reset()
+                }}
+              >
+                {t('sync_switch_login')}
+              </button>
+            )}
+            {mode === 'confirm' && (
               <button type="button" className="btn btn-ghost" disabled={busy} onClick={resend}>
                 {t('sync_resend')}
+              </button>
+            )}
+            {(mode === 'forgot-request' || mode === 'forgot-reset') && (
+              <button
+                type="button"
+                className="btn btn-ghost"
+                disabled={busy}
+                onClick={() => {
+                  setMode('login')
+                  reset()
+                }}
+              >
+                {t('sync_switch_login')}
               </button>
             )}
             <button type="submit" className="btn btn-primary" disabled={busy}>
@@ -163,9 +229,27 @@ export function SyncPanel({ sync }: { sync: SyncProp }) {
                   ? t('sync_login')
                   : mode === 'signup'
                     ? t('sync_signup')
-                    : t('sync_confirm')}
+                    : mode === 'confirm'
+                      ? t('sync_confirm')
+                      : mode === 'forgot-request'
+                        ? t('sync_send_code')
+                        : t('sync_reset_submit')}
             </button>
           </div>
+
+          {mode === 'login' && (
+            <button
+              type="button"
+              className="link"
+              style={{ marginTop: 10 }}
+              onClick={() => {
+                setMode('forgot-request')
+                reset()
+              }}
+            >
+              {t('sync_forgot')}
+            </button>
+          )}
         </form>
       </section>
     )

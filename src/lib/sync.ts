@@ -71,6 +71,14 @@ export async function resendCode(username: string): Promise<void> {
   await authCall({ action: 'resend', username })
 }
 
+export async function forgotPassword(username: string): Promise<void> {
+  await authCall({ action: 'forgot', username })
+}
+
+export async function resetPassword(username: string, code: string, password: string): Promise<void> {
+  await authCall({ action: 'resetPassword', username, code, password })
+}
+
 export async function logIn(username: string, password: string): Promise<void> {
   const t = await authCall<Tokens>({ action: 'login', username, password })
   saveTokens(t)

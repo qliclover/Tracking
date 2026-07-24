@@ -3,12 +3,14 @@ import { AppState } from './types'
 import {
   confirmSignUp,
   currentUsername,
+  forgotPassword,
   isLoggedIn,
   logIn,
   logOut,
   pull,
   push,
   resendCode,
+  resetPassword,
   signUp,
 } from './sync'
 
@@ -118,5 +120,17 @@ export function useSync({ state, onRemote }: Options) {
     setStatus('loggedOut')
   }
 
-  return { status, lastError, username, syncNow, login, signup, confirm, resend, logout }
+  async function forgot(u: string) {
+    setLastError('')
+    await forgotPassword(u)
+  }
+
+  /** Confirm the code emailed for password reset, set the new password, then log straight in. */
+  async function resetPass(u: string, code: string, newPassword: string) {
+    setLastError('')
+    await resetPassword(u, code, newPassword)
+    await login(u, newPassword)
+  }
+
+  return { status, lastError, username, syncNow, login, signup, confirm, resend, logout, forgot, resetPass }
 }
