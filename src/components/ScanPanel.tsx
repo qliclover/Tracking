@@ -99,6 +99,11 @@ export function ScanPanel({ currency, onAdd }: Props) {
           {loading ? t('reading') : t('read_receipt')}
         </button>
       )}
+
+      <p className="muted" style={{ lineHeight: 1.6, margin: '22px 2px 0' }}>{t('scan_desc')}</p>
+
+      <div className="rule" />
+      <p className="footer-credit">{t('scan_powered')}</p>
     </div>
   )
 }

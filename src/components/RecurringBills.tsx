@@ -105,6 +105,7 @@ export function RecurringBills({ currency, recurring, onAdd, onUpdate, onDelete 
             <button className="btn btn-ghost" onClick={() => { setOpen(false); setError('') }}>{t('cancel')}</button>
             <button className="btn btn-primary" onClick={submit}>{t('add_bill')}</button>
           </div>
+          <p className="muted" style={{ lineHeight: 1.6, margin: '20px 0 0' }}>{t('bill_hint')}</p>
         </div>
       ) : (
         <button className="btn btn-ghost" onClick={() => setOpen(true)}>{t('add_fixed')}</button>

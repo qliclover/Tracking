@@ -31,6 +31,10 @@ const MONTH = [
   'JANUARY', 'FEBRUARY', 'MARCH', 'APRIL', 'MAY', 'JUNE',
   'JULY', 'AUGUST', 'SEPTEMBER', 'OCTOBER', 'NOVEMBER', 'DECEMBER',
 ]
+const ZH_MONTH = [
+  '一月', '二月', '三月', '四月', '五月', '六月',
+  '七月', '八月', '九月', '十月', '十一月', '十二月',
+]
 
 /** The budget cycle that contains `now`, given a reset day-of-month. */
 export function currentPeriod(resetDay: number, now: Date = new Date()): Period {
@@ -63,7 +67,7 @@ export function periodLabel(p: Period, resetDay: number, lang: 'zh' | 'en'): str
   const s = p.start
   const last = new Date(p.end.getTime() - 86400000)
   if (lang === 'zh') {
-    if (resetDay === 1) return `${s.getFullYear()}年${s.getMonth() + 1}月`
+    if (resetDay === 1) return `${s.getFullYear()}年 ${ZH_MONTH[s.getMonth()]}`
     return `${s.getMonth() + 1}月${s.getDate()}日 – ${last.getMonth() + 1}月${last.getDate()}日`
   }
   return p.label

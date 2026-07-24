@@ -1,6 +1,6 @@
 import { BudgetSummary } from '../lib/budget'
 import { money, splitMoney } from '../lib/format'
-import { useT } from '../lib/i18n'
+import { useT, useLang } from '../lib/i18n'
 
 interface Props {
   summary: BudgetSummary
@@ -83,6 +83,7 @@ function renderBills(text: string) {
 
 function Reminder({ summary, currency }: Props) {
   const t = useT()
+  const lang = useLang()
   const m = (n: number) => money(n, currency)
   let text: string
   if (summary.budget <= 0) text = t('set_budget_first')
@@ -90,5 +91,6 @@ function Reminder({ summary, currency }: Props) {
   else if (summary.level === 'warn')
     text = t('rem_warn', { v: m(summary.remaining), p: m(summary.perDay) })
   else text = t('rem_ok', { p: m(summary.perDay) })
-  return <p className="reminder">{text}</p>
+  // English copy reads as an italic serif note; Chinese (LXGW WenKai) stays upright.
+  return <p className="reminder" style={lang === 'en' ? { fontStyle: 'italic' } : undefined}>{text}</p>
 }

@@ -183,7 +183,7 @@ export default function App() {
     <div className="app">
       <header className="topbar">
         <div className="brand-text">
-          <div className="wordmark cjk">有余</div>
+          <div className={`wordmark ${lang === 'zh' ? 'cjk' : 'serif'}`}>{lang === 'zh' ? '有余' : 'Margin'}</div>
           <span className="month">{periodLabel(period, state.settings.resetDay, lang)}</span>
         </div>
         <button

@@ -105,6 +105,14 @@ export function VoicePanel({ currency, onAdd }: Props) {
       >
         {loading ? t('analyzing') : t('analyze')}
       </button>
+
+      <div className="rule" />
+      {(!speech.supported || Boolean(speech.error)) && (
+        <p className="footer-credit" style={{ color: 'var(--danger)', marginBottom: 8 }}>
+          {t('mic_unavailable')}
+        </p>
+      )}
+      <p className="muted" style={{ lineHeight: 1.6, margin: 0 }}>{t('voice_desc')}</p>
     </div>
   )
 }

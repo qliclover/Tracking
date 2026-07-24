@@ -50,6 +50,11 @@ const DICT: Record<string, Entry> = {
   read_receipt: { zh: '识别小票', en: 'Read receipt' },
   reading: { zh: '识别中…', en: 'Reading…' },
   scan_failed: { zh: '识别失败。', en: 'Scan failed.' },
+  scan_desc: {
+    zh: '对准小票拍照,AI 会自动读出商家、单项、税费与合计,生成一张可编辑的草稿,一键确认即可入账。',
+    en: 'Point your camera at a receipt and AI reads the merchant, line items, tax, and total — then drops it into an editable draft you confirm in one tap.',
+  },
+  scan_powered: { zh: 'Powered by Qwen-VL · 通义千问', en: 'Powered by Qwen-VL · 通义千问' },
 
   // Voice
   from_receipt: { zh: '来自小票 · 核对后保存', en: 'From receipt · check & save' },
@@ -64,6 +69,11 @@ const DICT: Record<string, Entry> = {
   analyze: { zh: '解析', en: 'Analyze' },
   analyzing: { zh: '解析中…', en: 'Analyzing…' },
   analyze_failed: { zh: '无法解析,请重试。', en: 'Could not analyze.' },
+  voice_desc: {
+    zh: '说一句“午饭花了 25 块”,通义千问会把它变成一条结构化记录 —— 任意语言都行。国内浏览器听写不可用时会自动切到打字。',
+    en: 'Say “12.40 on lunch today” and Qwen turns it into a structured entry — any language works. Falls back to typing automatically when browser dictation is unavailable.',
+  },
+  mic_unavailable: { zh: 'Mic unavailable · 已切到打字', en: 'Mic unavailable · switched to typing' },
 
   // Expense list
   empty_title: { zh: '干净的一页。', en: 'A clean page.' },
@@ -112,6 +122,10 @@ const DICT: Record<string, Entry> = {
   add_fixed: { zh: '+ 添加固定账单', en: '+ Add a fixed bill' },
   bill_name: { zh: '名称', en: 'Name' },
   bill_name_ph: { zh: '如:房租、Netflix', en: 'e.g. Rent, Netflix' },
+  bill_hint: {
+    zh: '固定账单会在每个周期到期日自动入账,未到期的金额会先从"本月可花"里预留出来,让剩余额度更真实。',
+    en: 'Fixed bills post automatically on their due day each cycle. Upcoming ones are reserved against "left to spend" so your balance stays honest.',
+  },
   charged_day: { zh: '每月扣费日', en: 'Charged on day' },
   add_bill: { zh: '添加', en: 'Add bill' },
   cancel: { zh: '取消', en: 'Cancel' },
