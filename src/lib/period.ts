@@ -124,3 +124,15 @@ export function monthKeyLabel(key: string, lang: 'zh' | 'en'): string {
   if (!y || !m) return key
   return lang === 'zh' ? `${y}年 ${ZH_MONTH[m - 1]}` : `${MONTH[m - 1]} ${y}`
 }
+
+/** Just the month word for a "YYYY-MM" key, e.g. "三月" / "March" — no year. */
+export function monthOnlyLabel(key: string, lang: 'zh' | 'en'): string {
+  const m = Number(key.split('-')[1])
+  if (!m) return key
+  return lang === 'zh' ? ZH_MONTH[m - 1] : MONTH[m - 1]
+}
+
+/** The "YYYY" year of a "YYYY-MM" key. */
+export function yearOfKey(key: string): string {
+  return key.slice(0, 4)
+}

@@ -1,9 +1,9 @@
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
 import { Category, Expense } from '../lib/types'
 import { signedMoney, prettyDate, money } from '../lib/format'
 import { categoryColor } from '../lib/categoryColors'
 import { categoryDisplay } from '../lib/categories'
-import { monthKey, monthKeyLabel } from '../lib/period'
+import { monthKey, monthOnlyLabel, yearOfKey } from '../lib/period'
 import { useT, useLang } from '../lib/i18n'
 
 interface Props {
@@ -13,12 +13,19 @@ interface Props {
   onDelete: (id: string) => void
 }
 
-/** All expenses grouped by calendar month, newest first — not filtered to the current cycle. */
+interface MonthGroup {
+  key: string
+  list: Expense[]
+  total: number
+}
+
+/** All expenses grouped by year → month — browse one month at a time, not everything at once. */
 export function HistoryList({ expenses, categories, currency, onDelete }: Props) {
   const t = useT()
   const lang = useLang()
+  const [selected, setSelected] = useState<string | null>(null)
 
-  const groups = useMemo(() => {
+  const groups = useMemo<MonthGroup[]>(() => {
     const byMonth = new Map<string, Expense[]>()
     for (const e of expenses) {
       const key = monthKey(e.date)
@@ -43,34 +50,73 @@ export function HistoryList({ expenses, categories, currency, onDelete }: Props)
     )
   }
 
-  return (
-    <section>
-      {groups.map((g) => (
-        <div key={g.key} style={{ marginBottom: 20 }}>
-          <div className="row" style={{ borderBottom: 'none', padding: '4px 0 8px' }}>
-            <p className="section-head" style={{ margin: 0 }}>{monthKeyLabel(g.key, lang)}</p>
-            <span className="muted">{money(g.total, currency)}</span>
-          </div>
-          <ul style={{ listStyle: 'none', margin: 0, padding: 0 }}>
-            {g.list.map((e) => (
-              <li key={e.id} className="row">
-                <div className="r-main">
-                  <span className="dot" style={{ background: categoryColor(e.category, categories) }} />
-                  <div className="r-text">
-                    <div className="r-title">{e.note || categoryDisplay(e.category, lang)}</div>
-                    <div className="r-sub">
-                      {categoryDisplay(e.category, lang)} · {prettyDate(e.date, lang)}
-                    </div>
+  const activeGroup = selected ? groups.find((g) => g.key === selected) : undefined
+
+  if (activeGroup) {
+    return (
+      <section>
+        <button type="button" className="link" onClick={() => setSelected(null)}>
+          ‹ {t('history')}
+        </button>
+        <div className="row" style={{ borderBottom: 'none', padding: '12px 0 8px' }}>
+          <p className="section-head" style={{ margin: 0 }}>{yearOfKey(activeGroup.key)} · {monthOnlyLabel(activeGroup.key, lang)}</p>
+          <span className="muted">{money(activeGroup.total, currency)}</span>
+        </div>
+        <ul style={{ listStyle: 'none', margin: 0, padding: 0 }}>
+          {activeGroup.list.map((e) => (
+            <li key={e.id} className="row">
+              <div className="r-main">
+                <span className="dot" style={{ background: categoryColor(e.category, categories) }} />
+                <div className="r-text">
+                  <div className="r-title">{e.note || categoryDisplay(e.category, lang)}</div>
+                  <div className="r-sub">
+                    {categoryDisplay(e.category, lang)} · {prettyDate(e.date, lang)}
                   </div>
                 </div>
-                <span className="r-amt">{signedMoney(-e.amount, currency)}</span>
+              </div>
+              <span className="r-amt">{signedMoney(-e.amount, currency)}</span>
+              <button
+                className="r-del"
+                aria-label={t('remove')}
+                onClick={() => onDelete(e.id)}
+                title={t('remove')}
+              >
+                ×
+              </button>
+            </li>
+          ))}
+        </ul>
+      </section>
+    )
+  }
+
+  const byYear: { year: string; months: MonthGroup[] }[] = []
+  for (const g of groups) {
+    const year = yearOfKey(g.key)
+    const last = byYear[byYear.length - 1]
+    if (last && last.year === year) last.months.push(g)
+    else byYear.push({ year, months: [g] })
+  }
+
+  return (
+    <section>
+      {byYear.map((y) => (
+        <div key={y.year} style={{ marginBottom: 20 }}>
+          <p className="section-head">{y.year}</p>
+          <ul style={{ listStyle: 'none', margin: 0, padding: 0 }}>
+            {y.months.map((g) => (
+              <li key={g.key}>
                 <button
-                  className="r-del"
-                  aria-label={t('remove')}
-                  onClick={() => onDelete(e.id)}
-                  title={t('remove')}
+                  type="button"
+                  className="row"
+                  style={{ width: '100%', background: 'none', border: 'none', textAlign: 'left', cursor: 'pointer' }}
+                  onClick={() => setSelected(g.key)}
                 >
-                  ×
+                  <div className="r-text">
+                    <div className="r-title" style={{ fontSize: 15 }}>{monthOnlyLabel(g.key, lang)}</div>
+                  </div>
+                  <span className="r-amt">{money(g.total, currency)}</span>
+                  <span className="muted" style={{ fontSize: 18, marginLeft: 8 }}>›</span>
                 </button>
               </li>
             ))}
