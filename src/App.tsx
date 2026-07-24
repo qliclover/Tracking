@@ -15,6 +15,7 @@ import { EntrySection, EntryMode } from './components/EntrySection'
 import { ExpenseList } from './components/ExpenseList'
 import { Insights } from './components/Insights'
 import { SettingsPage } from './components/SettingsPage'
+import { CategoriesPage } from './components/CategoriesPage'
 import { HistoryList } from './components/HistoryPage'
 import { ProfilePage } from './components/ProfilePage'
 import { FixedBillsPage } from './components/FixedBillsPage'
@@ -26,6 +27,7 @@ type View =
   | 'home'
   | 'settings'
   | 'profile'
+  | 'categories'
   | 'fixedbills'
   | 'appearance'
   | 'sync'
@@ -235,6 +237,22 @@ export default function App() {
     )
   }
 
+  if (view === 'categories') {
+    return (
+      <LangProvider lang={lang}>
+      <div className="app">
+        <CategoriesPage
+          categories={state.categories}
+          onAdd={addCategory}
+          onRename={renameCategory}
+          onDelete={deleteCategory}
+          onBack={() => setView('settings')}
+        />
+      </div>
+      </LangProvider>
+    )
+  }
+
   if (view === 'fixedbills') {
     return (
       <LangProvider lang={lang}>
@@ -301,10 +319,8 @@ export default function App() {
           theme={theme}
           sync={sync}
           onSettings={saveSettings}
-          onAddCategory={addCategory}
-          onRenameCategory={renameCategory}
-          onDeleteCategory={deleteCategory}
           onOpenProfile={() => setView('profile')}
+          onOpenCategories={() => setView('categories')}
           onOpenFixedBills={() => setView('fixedbills')}
           onOpenAppearance={() => setView('appearance')}
           onOpenSync={() => setView('sync')}

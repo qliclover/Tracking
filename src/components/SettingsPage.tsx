@@ -4,7 +4,6 @@ import { Theme } from '../lib/theme'
 import { CURRENCIES } from '../lib/currencies'
 import { useT } from '../lib/i18n'
 import { SyncProp } from './SyncPanel'
-import { CategoryManager } from './CategoryManager'
 
 interface Props {
   settings: Settings
@@ -14,10 +13,8 @@ interface Props {
   theme: Theme
   sync: SyncProp
   onSettings: (s: Settings) => void
-  onAddCategory: (name: string) => void
-  onRenameCategory: (oldName: string, newName: string) => void
-  onDeleteCategory: (name: string) => void
   onOpenProfile: () => void
+  onOpenCategories: () => void
   onOpenFixedBills: () => void
   onOpenAppearance: () => void
   onOpenSync: () => void
@@ -57,10 +54,8 @@ export function SettingsPage({
   theme,
   sync,
   onSettings,
-  onAddCategory,
-  onRenameCategory,
-  onDeleteCategory,
   onOpenProfile,
+  onOpenCategories,
   onOpenFixedBills,
   onOpenAppearance,
   onOpenSync,
@@ -151,10 +146,12 @@ export function SettingsPage({
         <p className="muted" style={{ marginTop: -4 }}>{t('reset_hint')}</p>
       </section>
 
-      {/* Categories — inline */}
-      <CategoryManager categories={categories} onAdd={onAddCategory} onRename={onRenameCategory} onDelete={onDeleteCategory} />
-
       <section className="setting-block">
+        <NavRow
+          title={t('manage_categories')}
+          subtitle={t('category_count', { v: categories.length })}
+          onClick={onOpenCategories}
+        />
         <NavRow
           title={t('fixed_bills')}
           subtitle={t('bills_count', { v: recurring.length })}
