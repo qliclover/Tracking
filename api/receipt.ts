@@ -48,6 +48,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const { object } = await generateObject({
       model: visionModel(),
       schema: receiptSchema,
+      mode: 'json',
       messages: [
         {
           role: 'user',
