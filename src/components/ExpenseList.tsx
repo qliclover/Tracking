@@ -1,5 +1,7 @@
 import { Expense } from '../lib/types'
-import { money, prettyDate } from '../lib/format'
+import { signedMoney, prettyDate } from '../lib/format'
+import { categoryColor } from '../lib/categoryColors'
+import { QUICK_CATEGORIES } from './AddExpense'
 
 interface Props {
   expenses: Expense[]
@@ -10,29 +12,33 @@ interface Props {
 export function ExpenseList({ expenses, currency, onDelete }: Props) {
   if (expenses.length === 0) {
     return (
-      <section className="card empty">
-        <p>No expenses yet this month.</p>
-        <p className="muted">Log your first one above and watch the budget update.</p>
+      <section className="empty">
+        <span className="serif">A clean page.</span>
+        <p>Record your first expense above.</p>
       </section>
     )
   }
 
   return (
-    <section className="card list">
-      <h2 className="list-title">This month</h2>
-      <ul>
+    <section>
+      <ul style={{ listStyle: 'none', margin: 0, padding: 0 }}>
         {expenses.map((e) => (
-          <li key={e.id} className="expense-row">
-            <div className="expense-main">
-              <span className="expense-cat">{e.category}</span>
-              {e.note && <span className="expense-note">{e.note}</span>}
+          <li key={e.id} className="row">
+            <div className="r-main">
+              <span
+                className="dot"
+                style={{ background: categoryColor(e.category, QUICK_CATEGORIES) }}
+              />
+              <div className="r-text">
+                <div className="r-title">{e.note || e.category}</div>
+                <div className="r-sub">
+                  {e.category} · {prettyDate(e.date)}
+                </div>
+              </div>
             </div>
-            <div className="expense-side">
-              <span className="expense-amount">{money(e.amount, currency)}</span>
-              <span className="expense-date">{prettyDate(e.date)}</span>
-            </div>
+            <span className="r-amt">{signedMoney(-e.amount, currency)}</span>
             <button
-              className="btn-icon"
+              className="r-del"
               aria-label={`Delete ${e.category} expense`}
               onClick={() => onDelete(e.id)}
               title="Delete"

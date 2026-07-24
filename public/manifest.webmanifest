@@ -1,11 +1,11 @@
 {
-  "name": "Tracking · Monthly Budget",
+  "name": "Tracking · Keep a beautiful record",
   "short_name": "Tracking",
-  "description": "One monthly budget, live reminders, painless spend tracking.",
+  "description": "One monthly budget, calmly tracked.",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#0f172a",
-  "theme_color": "#0f172a",
+  "background_color": "#faf9f7",
+  "theme_color": "#faf9f7",
   "icons": [
     {
       "src": "/favicon.svg",

@@ -1,15 +1,19 @@
 import { FormEvent, useState } from 'react'
 import { Settings } from '../lib/types'
+import { Theme } from '../lib/theme'
 
 interface Props {
   settings: Settings
+  theme: Theme
   onSave: (s: Settings) => void
+  onThemeChange: (t: Theme) => void
   onClose: () => void
 }
 
-const CURRENCIES = ['$', '€', '£', '¥', '₩', 'A$', 'C$']
+const CURRENCIES = ['$', '€', '£', '¥', '₩', '₹']
+const THEMES: Theme[] = ['system', 'light', 'dark']
 
-export function SettingsDialog({ settings, onSave, onClose }: Props) {
+export function SettingsDialog({ settings, theme, onSave, onThemeChange, onClose }: Props) {
   const [budget, setBudget] = useState(String(settings.monthlyBudget))
   const [currency, setCurrency] = useState(settings.currency)
   const [warnPct, setWarnPct] = useState(String(Math.round(settings.warnThreshold * 100)))
@@ -19,54 +23,71 @@ export function SettingsDialog({ settings, onSave, onClose }: Props) {
     const b = Number(budget)
     const w = Number(warnPct)
     onSave({
-      monthlyBudget: Number.isFinite(b) && b >= 0 ? Math.round(b * 100) / 100 : settings.monthlyBudget,
+      monthlyBudget:
+        Number.isFinite(b) && b >= 0 ? Math.round(b * 100) / 100 : settings.monthlyBudget,
       currency: currency || '$',
-      warnThreshold: Number.isFinite(w) ? Math.min(0.9, Math.max(0, w / 100)) : settings.warnThreshold,
+      warnThreshold: Number.isFinite(w)
+        ? Math.min(0.9, Math.max(0, w / 100))
+        : settings.warnThreshold,
     })
   }
 
   return (
     <div className="overlay" onClick={onClose}>
-      <div className="card dialog" onClick={(e) => e.stopPropagation()}>
-        <h2>Budget settings</h2>
+      <div className="sheet" onClick={(e) => e.stopPropagation()}>
+        <h2>Settings</h2>
         <form onSubmit={submit}>
-          <label className="field">
-            <span className="field-label">Monthly budget</span>
+          <div className="field">
+            <label className="flabel" htmlFor="s-budget">Monthly budget</label>
             <input
+              id="s-budget"
               inputMode="decimal"
               value={budget}
               onChange={(e) => setBudget(e.target.value)}
               autoFocus
             />
-          </label>
+          </div>
 
-          <label className="field">
-            <span className="field-label">Currency</span>
-            <div className="chips">
-              {CURRENCIES.map((c) => (
-                <button
-                  type="button"
-                  key={c}
-                  className={`chip ${currency === c ? 'chip-active' : ''}`}
-                  onClick={() => setCurrency(c)}
-                >
-                  {c}
-                </button>
-              ))}
-            </div>
-          </label>
+          <p className="flabel">Currency</p>
+          <div className="cat-grid">
+            {CURRENCIES.map((c) => (
+              <button
+                type="button"
+                key={c}
+                className={`cat ${currency === c ? 'active' : ''}`}
+                onClick={() => setCurrency(c)}
+              >
+                {c}
+              </button>
+            ))}
+          </div>
 
-          <label className="field">
-            <span className="field-label">Warn me when this % of budget is left</span>
+          <div className="field">
+            <label className="flabel" htmlFor="s-warn">Warn when % of budget is left</label>
             <input
+              id="s-warn"
               inputMode="numeric"
               value={warnPct}
               onChange={(e) => setWarnPct(e.target.value)}
             />
-          </label>
+          </div>
 
-          <div className="dialog-actions">
-            <button type="button" className="btn" onClick={onClose}>
+          <p className="flabel">Appearance</p>
+          <div className="theme-row">
+            {THEMES.map((t) => (
+              <button
+                type="button"
+                key={t}
+                className={`cat ${theme === t ? 'active' : ''}`}
+                onClick={() => onThemeChange(t)}
+              >
+                {t[0].toUpperCase() + t.slice(1)}
+              </button>
+            ))}
+          </div>
+
+          <div className="sheet-actions">
+            <button type="button" className="btn btn-ghost" onClick={onClose}>
               Cancel
             </button>
             <button type="submit" className="btn btn-primary">

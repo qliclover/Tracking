@@ -1,13 +1,14 @@
 import { FormEvent, useState } from 'react'
 import { Expense } from '../lib/types'
 import { todayISO } from '../lib/format'
+import { categoryColor } from '../lib/categoryColors'
 
 interface Props {
   currency: string
   onAdd: (input: Omit<Expense, 'id' | 'createdAt'>) => void
 }
 
-const QUICK_CATEGORIES = ['Food', 'Transport', 'Shopping', 'Bills', 'Fun', 'Other']
+export const QUICK_CATEGORIES = ['Food', 'Transport', 'Shopping', 'Bills', 'Fun', 'Other']
 
 export function AddExpense({ currency, onAdd }: Props) {
   const [amount, setAmount] = useState('')
@@ -35,53 +36,62 @@ export function AddExpense({ currency, onAdd }: Props) {
   }
 
   return (
-    <form className="card add-expense" onSubmit={submit}>
-      <div className="row">
-        <label className="field amount-field">
-          <span className="field-label">Amount</span>
-          <div className="amount-input">
-            <span className="currency">{currency}</span>
-            <input
-              inputMode="decimal"
-              placeholder="0.00"
-              value={amount}
-              onChange={(e) => setAmount(e.target.value)}
-              aria-label="Expense amount"
-            />
-          </div>
-        </label>
-        <label className="field">
-          <span className="field-label">Date</span>
-          <input type="date" value={date} onChange={(e) => setDate(e.target.value)} />
-        </label>
+    <form onSubmit={submit}>
+      <p className="section-head">New entry</p>
+
+      <div className="field amount">
+        <label className="flabel" htmlFor="amount">Amount</label>
+        <div className="amount-wrap">
+          <span className="cur">{currency}</span>
+          <input
+            id="amount"
+            inputMode="decimal"
+            placeholder="0.00"
+            value={amount}
+            onChange={(e) => setAmount(e.target.value)}
+          />
+        </div>
       </div>
 
-      <div className="chips">
+      <div className="cat-grid">
         {QUICK_CATEGORIES.map((c) => (
           <button
             type="button"
             key={c}
-            className={`chip ${category === c ? 'chip-active' : ''}`}
+            className={`cat ${category === c ? 'active' : ''}`}
             onClick={() => setCategory(c)}
           >
+            <span className="dot" style={{ background: categoryColor(c, QUICK_CATEGORIES) }} />
             {c}
           </button>
         ))}
       </div>
 
-      <label className="field">
-        <span className="field-label">Note (optional)</span>
-        <input
-          placeholder="e.g. lunch with team"
-          value={note}
-          onChange={(e) => setNote(e.target.value)}
-        />
-      </label>
+      <div className="two">
+        <div className="field">
+          <label className="flabel" htmlFor="note">Note</label>
+          <input
+            id="note"
+            placeholder="optional"
+            value={note}
+            onChange={(e) => setNote(e.target.value)}
+          />
+        </div>
+        <div className="field">
+          <label className="flabel" htmlFor="date">Date</label>
+          <input
+            id="date"
+            type="date"
+            value={date}
+            onChange={(e) => setDate(e.target.value)}
+          />
+        </div>
+      </div>
 
       {error && <p className="error">{error}</p>}
 
       <button type="submit" className="btn btn-primary">
-        Log expense
+        Record it
       </button>
     </form>
   )

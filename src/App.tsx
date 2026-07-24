@@ -3,6 +3,7 @@ import { AppState, Expense, Settings } from './lib/types'
 import { loadState, saveState, makeExpense } from './lib/storage'
 import { expensesForMonth, monthKey, summarize } from './lib/budget'
 import { monthLabel } from './lib/format'
+import { Theme, getTheme, applyTheme, nextTheme } from './lib/theme'
 import { BudgetCard } from './components/BudgetCard'
 import { AddExpense } from './components/AddExpense'
 import { ExpenseList } from './components/ExpenseList'
@@ -10,12 +11,16 @@ import { SettingsDialog } from './components/SettingsDialog'
 
 export default function App() {
   const [state, setState] = useState<AppState>(() => loadState())
+  const [theme, setTheme] = useState<Theme>(() => getTheme())
   const [settingsOpen, setSettingsOpen] = useState(false)
 
-  // Persist on every change.
   useEffect(() => {
     saveState(state)
   }, [state])
+
+  useEffect(() => {
+    applyTheme(theme)
+  }, [theme])
 
   const currentMonth = monthKey()
 
@@ -42,26 +47,31 @@ export default function App() {
     setSettingsOpen(false)
   }
 
+  const themeShort = theme === 'system' ? 'Auto' : theme === 'light' ? 'Light' : 'Dark'
+
   return (
     <div className="app">
       <header className="topbar">
-        <div>
-          <h1 className="brand">Tracking</h1>
-          <p className="subtitle">{monthLabel(currentMonth)}</p>
-        </div>
+        <span className="month">{monthLabel(currentMonth)}</span>
         <button
-          className="btn-icon settings-btn"
-          onClick={() => setSettingsOpen(true)}
-          aria-label="Settings"
-          title="Budget settings"
+          className="theme-toggle"
+          onClick={() => setTheme((t) => nextTheme(t))}
+          aria-label="Toggle theme"
+          title="Toggle appearance"
         >
-          ⚙
+          {themeShort}
         </button>
       </header>
 
       <main className="content">
         <BudgetCard summary={summary} currency={state.settings.currency} />
+
+        <div className="rule" />
+
         <AddExpense currency={state.settings.currency} onAdd={addExpense} />
+
+        <div className="rule" />
+
         <ExpenseList
           expenses={monthExpenses}
           currency={state.settings.currency}
@@ -69,14 +79,22 @@ export default function App() {
         />
       </main>
 
-      <footer className="footer">
-        <span>One budget. Every account. No fuss.</span>
-      </footer>
+      <button
+        className="btn btn-ghost"
+        style={{ marginTop: 20 }}
+        onClick={() => setSettingsOpen(true)}
+      >
+        Budget settings
+      </button>
+
+      <footer className="footer">Keep a beautiful record</footer>
 
       {settingsOpen && (
         <SettingsDialog
           settings={state.settings}
+          theme={theme}
           onSave={saveSettings}
+          onThemeChange={setTheme}
           onClose={() => setSettingsOpen(false)}
         />
       )}

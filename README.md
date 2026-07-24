@@ -28,11 +28,21 @@ one running total, and one clear answer to "can I afford this right now?"
   `localStorage`. No accounts, no server, no data leaves your device.
 - **Installable** — it's a PWA, so you can add it to your phone's home screen.
 
+## Design
+
+The look is an editorial **"ledger"** aesthetic — a warm paper background, large
+[Instrument Serif](https://fonts.google.com/specimen/Instrument+Serif) numbers,
+uppercase hairline labels, thin dividers, and muted earthy category dots. It
+ships with light, dark, and system themes (toggle in the header or Settings).
+The style deliberately mirrors the companion *Nook* app so the two feel like one
+family.
+
 ## Tech stack
 
 - [Vite](https://vite.dev/) + [React 18](https://react.dev/) + TypeScript
-- No runtime dependencies beyond React — the budget logic is plain, tested-by-design
+- No runtime dependencies beyond React — the budget logic is plain, testable
   functions in `src/lib/`.
+- Fonts (Instrument Serif + Geist Mono) load from Google Fonts.
 
 ## Getting started
 
@@ -48,17 +58,20 @@ npm run preview  # preview the production build locally
 ```
 src/
   lib/
-    types.ts      # domain types (Expense, Settings, AppState)
-    storage.ts    # localStorage load/save + id helpers
-    budget.ts     # month math, budget summary, reminder text
-    format.ts     # money / date formatting helpers
+    types.ts          # domain types (Expense, Settings, AppState)
+    storage.ts        # localStorage load/save + id helpers
+    budget.ts         # month math, budget summary, reminder logic
+    format.ts         # money / date formatting helpers
+    theme.ts          # light / dark / system theme handling
+    categoryColors.ts # earthy dot palette
   components/
-    BudgetCard.tsx     # the headline "left to spend" card
+    BudgetCard.tsx     # the serif "left to spend" hero + reminder
     AddExpense.tsx     # the log-an-expense form
-    ExpenseList.tsx    # this month's expenses
-    SettingsDialog.tsx # budget / currency / warn threshold
+    ExpenseList.tsx    # this month's ledger rows
+    SettingsDialog.tsx # budget / currency / warn threshold / theme
   App.tsx         # state, persistence, and layout
   main.tsx        # React entry point
+  styles.css      # the ledger design system
 ```
 
 ## Roadmap ideas
