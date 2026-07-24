@@ -12,6 +12,7 @@
   --key-bg: #ece9e2;
 
   --serif: 'Instrument Serif', Georgia, 'Times New Roman', serif;
+  --serif-cjk: 'Noto Serif SC', 'Instrument Serif', Georgia, serif;
   --mono: 'Geist Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
   --sans: -apple-system, BlinkMacSystemFont, system-ui, 'Segoe UI', Roboto, sans-serif;
 }
@@ -104,16 +105,52 @@ body {
 /* ---- Top bar ---- */
 .topbar {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   justify-content: space-between;
-  margin-bottom: 26px;
+  margin-bottom: 28px;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.brand-text {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.cjk {
+  font-family: var(--serif-cjk);
+  font-weight: 600;
 }
 
 .wordmark {
-  font-size: 22px;
+  font-size: 23px;
   line-height: 1;
   letter-spacing: -0.3px;
-  margin-bottom: 5px;
+}
+.brand-text .wordmark {
+  margin-bottom: 0;
+}
+
+/* Logo mark — colors follow the theme. */
+.logo {
+  display: block;
+  flex: none;
+}
+.logo-sq {
+  fill: var(--fg);
+}
+.logo-line {
+  stroke: var(--bg);
+}
+.logo-line-2 {
+  stroke: var(--muted);
+}
+.logo-rule {
+  stroke: var(--danger);
 }
 
 .topbar .month {
@@ -125,7 +162,8 @@ body {
 }
 
 .topbar .theme-toggle {
-  margin-top: 6px;
+  align-self: flex-start;
+  margin-top: 2px;
 }
 
 .theme-toggle {
@@ -728,4 +766,45 @@ body {
   .sheet {
     border-radius: 14px;
   }
+}
+
+/* ---- Overall refinement pass ---- */
+body {
+  -webkit-tap-highlight-color: transparent;
+}
+button {
+  font-family: inherit;
+}
+.btn,
+.cat,
+.seg,
+.avatar,
+.chip,
+.tab,
+.theme-toggle {
+  transition: transform 0.08s ease, background 0.15s ease, border-color 0.15s ease,
+    color 0.15s ease, opacity 0.15s ease;
+}
+.btn:active,
+.cat:active,
+.seg:active,
+.avatar-btn:active {
+  transform: scale(0.98);
+}
+.btn-primary:active {
+  opacity: 0.92;
+}
+/* tighter, more intentional vertical rhythm */
+.rule {
+  margin: 24px 0;
+}
+.hero-label {
+  font-size: 16px;
+  margin: 0 0 4px;
+}
+.section-head {
+  margin-bottom: 14px;
+}
+.reminder {
+  margin-top: 20px;
 }

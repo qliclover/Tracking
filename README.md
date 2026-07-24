@@ -1,6 +1,6 @@
-# Margin
+# 有余 · Margin
 
-*Your monthly room to spend.*
+*Your monthly room to spend. （有余：还剩多少能花，给自己留点余地。）*
 
 A dead-simple monthly-budget expense tracker.
 

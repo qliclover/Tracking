@@ -1,5 +1,7 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
-  <rect width="64" height="64" rx="8" fill="#1a1a1a"/>
-  <text x="32" y="45" font-family="Georgia, 'Times New Roman', serif" font-size="38"
-        fill="#faf9f7" text-anchor="middle">M</text>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+  <rect width="100" height="100" rx="24" fill="#1a1a1a"/>
+  <line x1="37" y1="26" x2="37" y2="74" stroke="#c15b4a" stroke-width="6" stroke-linecap="round"/>
+  <line x1="49" y1="38" x2="76" y2="38" stroke="#faf9f7" stroke-width="6" stroke-linecap="round"/>
+  <line x1="49" y1="52" x2="76" y2="52" stroke="#faf9f7" stroke-width="6" stroke-linecap="round"/>
+  <line x1="49" y1="66" x2="66" y2="66" stroke="#8f8b82" stroke-width="6" stroke-linecap="round"/>
 </svg>

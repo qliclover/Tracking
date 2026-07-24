@@ -11,6 +11,7 @@ import { BudgetCard } from './components/BudgetCard'
 import { EntrySection } from './components/EntrySection'
 import { ExpenseList } from './components/ExpenseList'
 import { SettingsPage } from './components/SettingsPage'
+import { Logo } from './components/Logo'
 
 type View = 'home' | 'settings'
 
@@ -171,9 +172,12 @@ export default function App() {
   return (
     <div className="app">
       <header className="topbar">
-        <div>
-          <div className="wordmark serif">Margin</div>
-          <span className="month">{period.label}</span>
+        <div className="brand">
+          <Logo size={34} />
+          <div className="brand-text">
+            <div className="wordmark cjk">有余</div>
+            <span className="month">{period.label}</span>
+          </div>
         </div>
         <button
           className="avatar avatar-btn"

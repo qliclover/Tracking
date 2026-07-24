@@ -94,7 +94,7 @@ export function SettingsPage({
       <header className="topbar">
         <div>
           <div className="wordmark serif">Settings</div>
-          <span className="month">Margin</span>
+          <span className="month">有余 · Margin</span>
         </div>
         <button className="theme-toggle" onClick={onBack}>Done</button>
       </header>
