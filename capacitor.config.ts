@@ -9,7 +9,7 @@ const config: CapacitorConfig = {
   // review. Native changes (Swift, entitlements, the widget) still need a
   // new archive + review, since this URL only controls the WKWebView content.
   server: {
-    url: 'https://margin-budget-olive.vercel.app',
+    url: 'https://marginyouyu.vercel.app',
     cleartext: false,
   },
 };

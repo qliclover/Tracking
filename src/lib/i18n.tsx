@@ -61,7 +61,8 @@ const DICT: Record<string, Entry> = {
   from_voice: { zh: '来自语音 · 核对后保存', en: 'From voice · check & save' },
   more_items: { zh: '还有 {v} 项', en: '+{v} more' },
   tap_speak: { zh: '点一下,说出你花了多少', en: 'Tap and say what you spent' },
-  listening: { zh: '聆听中… 点击停止', en: 'Listening… tap to stop' },
+  listening: { zh: '录音中… 点击停止', en: 'Recording… tap to stop' },
+  transcribing: { zh: '转写中…', en: 'Transcribing…' },
   voice_hint: { zh: '例如:“午饭花了 25 块”', en: 'e.g. “12.40 on lunch today”' },
   type_instead: { zh: '改用打字', en: 'Type instead' },
   describe_expense: { zh: '描述这笔花销', en: 'Describe the expense' },
@@ -70,8 +71,8 @@ const DICT: Record<string, Entry> = {
   analyzing: { zh: '解析中…', en: 'Analyzing…' },
   analyze_failed: { zh: '无法解析,请重试。', en: 'Could not analyze.' },
   voice_desc: {
-    zh: '说一句“午饭花了 25 块”,通义千问会把它变成一条结构化记录 —— 任意语言都行。国内浏览器听写不可用时会自动切到打字。',
-    en: 'Say “12.40 on lunch today” and Qwen turns it into a structured entry — any language works. Falls back to typing automatically when browser dictation is unavailable.',
+    zh: '说一句”午饭花了 25 块”,通义千问会把它转成文字再解析成一条结构化记录 —— 任意语言都行。录音权限不可用时会自动切到打字。',
+    en: 'Say “12.40 on lunch today” and Qwen transcribes it, then parses it into a structured entry — any language works. Falls back to typing automatically when the mic is unavailable.',
   },
   mic_unavailable: { zh: 'Mic unavailable · 已切到打字', en: 'Mic unavailable · switched to typing' },
 

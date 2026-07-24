@@ -3,6 +3,7 @@ import { ExpenseDraft } from '../lib/receipt'
 import { scanReceipt } from '../lib/ai'
 import { Category } from '../lib/types'
 import { useT } from '../lib/i18n'
+import { compressImage } from '../lib/image'
 import { ExpenseForm } from './ExpenseForm'
 import { DraftHeader } from './DraftHeader'
 
@@ -24,8 +25,12 @@ export function ScanPanel({ currency, categories, onAdd }: Props) {
     const file = e.target.files?.[0]
     if (!file) return
     const reader = new FileReader()
-    reader.onload = () => {
-      setImage(String(reader.result))
+    reader.onload = async () => {
+      try {
+        setImage(await compressImage(String(reader.result)))
+      } catch {
+        setImage(String(reader.result))
+      }
       setDraft(null)
       setError('')
     }

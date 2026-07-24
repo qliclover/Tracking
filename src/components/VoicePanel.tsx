@@ -1,9 +1,9 @@
 import { useState } from 'react'
 import { ExpenseDraft } from '../lib/receipt'
-import { analyzeVoice } from '../lib/ai'
+import { analyzeVoice, transcribeAudio } from '../lib/ai'
 import { Category } from '../lib/types'
-import { useSpeech } from '../lib/useSpeech'
-import { useT, useLang } from '../lib/i18n'
+import { useAudioRecorder } from '../lib/useAudioRecorder'
+import { useT } from '../lib/i18n'
 import { ExpenseForm } from './ExpenseForm'
 import { DraftHeader } from './DraftHeader'
 
@@ -15,23 +15,41 @@ interface Props {
 
 export function VoicePanel({ currency, categories, onAdd }: Props) {
   const t = useT()
-  const lang = useLang()
-  const speech = useSpeech(lang === 'zh' ? 'zh-CN' : 'en-US')
+  const recorder = useAudioRecorder()
+  const [transcribing, setTranscribing] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [draft, setDraft] = useState<ExpenseDraft | null>(null)
   const [typed, setTyped] = useState('')
-  const [typeMode, setTypeMode] = useState(!speech.supported)
+  const [hasRecorded, setHasRecorded] = useState(false)
+  const [typeMode, setTypeMode] = useState(!recorder.supported)
 
-  // Browser dictation relies on Google servers and fails in mainland China —
-  // fall back to typing automatically if the mic errors.
-  const useTyping = typeMode || !speech.supported || Boolean(speech.error)
-  const text = useTyping ? typed : speech.transcript
+  const useTyping = typeMode || !recorder.supported
+
+  async function toggleRecord() {
+    setError('')
+    if (recorder.recording) {
+      const audio = await recorder.stop()
+      if (!audio) return
+      setTranscribing(true)
+      try {
+        setTyped(await transcribeAudio(audio))
+        setHasRecorded(true)
+      } catch (err) {
+        setError(err instanceof Error ? err.message : t('analyze_failed'))
+      } finally {
+        setTranscribing(false)
+      }
+    } else {
+      setHasRecorded(false)
+      setTyped('')
+      await recorder.start()
+    }
+  }
 
   async function analyze() {
-    const tr = text.trim()
+    const tr = typed.trim()
     if (!tr) return
-    if (speech.listening) speech.stop()
     setLoading(true)
     setError('')
     try {
@@ -53,14 +71,14 @@ export function VoicePanel({ currency, categories, onAdd }: Props) {
         header={<DraftHeader draft={draft} currency={currency} />}
         onCancel={() => {
           setDraft(null)
-          speech.reset()
           setTyped('')
+          setHasRecorded(false)
         }}
         onSubmit={(d) => {
           onAdd(d)
           setDraft(null)
-          speech.reset()
           setTyped('')
+          setHasRecorded(false)
         }}
       />
     )
@@ -72,15 +90,28 @@ export function VoicePanel({ currency, categories, onAdd }: Props) {
         <>
           <button
             type="button"
-            className={`mic ${speech.listening ? 'live' : ''}`}
-            onClick={() => (speech.listening ? speech.stop() : speech.start())}
+            className={`mic ${recorder.recording ? 'live' : ''}`}
+            onClick={toggleRecord}
+            disabled={transcribing}
           >
             <span className="mic-dot" />
-            {speech.listening ? t('listening') : t('tap_speak')}
+            {recorder.recording ? t('listening') : transcribing ? t('transcribing') : t('tap_speak')}
           </button>
-          <p className="transcript">
-            {speech.transcript || <span className="muted">{t('voice_hint')}</span>}
-          </p>
+          {hasRecorded ? (
+            <div className="field" style={{ marginTop: 12 }}>
+              <label className="flabel" htmlFor="typed">{t('describe_expense')}</label>
+              <input
+                id="typed"
+                placeholder={t('describe_ph')}
+                value={typed}
+                onChange={(e) => setTyped(e.target.value)}
+              />
+            </div>
+          ) : (
+            <p className="transcript">
+              <span className="muted">{t('voice_hint')}</span>
+            </p>
+          )}
           <button type="button" className="link" onClick={() => setTypeMode(true)}>
             {t('type_instead')}
           </button>
@@ -104,13 +135,13 @@ export function VoicePanel({ currency, categories, onAdd }: Props) {
         className="btn btn-primary"
         style={{ marginTop: 16 }}
         onClick={analyze}
-        disabled={loading || !text.trim()}
+        disabled={loading || transcribing || !typed.trim()}
       >
         {loading ? t('analyzing') : t('analyze')}
       </button>
 
       <div className="rule" />
-      {(!speech.supported || Boolean(speech.error)) && (
+      {(!recorder.supported || Boolean(recorder.error)) && (
         <p className="footer-credit" style={{ color: 'var(--danger)', marginBottom: 8 }}>
           {t('mic_unavailable')}
         </p>

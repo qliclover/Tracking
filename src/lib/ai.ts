@@ -39,6 +39,14 @@ export async function scanReceipt(imageDataUrl: string, categories: readonly Cat
   }
 }
 
+/** Send a recorded voice clip (data URL) and return the transcribed text. */
+export async function transcribeAudio(audioDataUrl: string): Promise<string> {
+  const { transcript } = await postJSON<{ transcript: string }>('/api/transcribe', {
+    audio: audioDataUrl,
+  })
+  return transcript
+}
+
 interface VoiceDraft {
   amount: number
   category: string
