@@ -1,11 +1,12 @@
 import { useEffect, useMemo, useState } from 'react'
-import { AppState, Expense, Settings } from './lib/types'
+import { AppState, Settings } from './lib/types'
+import { ExpenseDraft } from './lib/receipt'
 import { loadState, saveState, makeExpense } from './lib/storage'
 import { expensesForMonth, monthKey, summarize } from './lib/budget'
 import { monthLabel } from './lib/format'
 import { Theme, getTheme, applyTheme, nextTheme } from './lib/theme'
 import { BudgetCard } from './components/BudgetCard'
-import { AddExpense } from './components/AddExpense'
+import { EntrySection } from './components/EntrySection'
 import { ExpenseList } from './components/ExpenseList'
 import { SettingsDialog } from './components/SettingsDialog'
 
@@ -34,8 +35,17 @@ export default function App() {
     [monthExpenses, state.settings],
   )
 
-  function addExpense(input: Omit<Expense, 'id' | 'createdAt'>) {
-    setState((s) => ({ ...s, expenses: [...s.expenses, makeExpense(input)] }))
+  function addExpense(draft: ExpenseDraft) {
+    const expense = makeExpense({
+      amount: draft.amount,
+      category: draft.category,
+      note: draft.note || undefined,
+      date: draft.date,
+      source: draft.source,
+      merchant: draft.merchant,
+      items: draft.items,
+    })
+    setState((s) => ({ ...s, expenses: [...s.expenses, expense] }))
   }
 
   function deleteExpense(id: string) {
@@ -68,7 +78,7 @@ export default function App() {
 
         <div className="rule" />
 
-        <AddExpense currency={state.settings.currency} onAdd={addExpense} />
+        <EntrySection currency={state.settings.currency} onAdd={addExpense} />
 
         <div className="rule" />
 

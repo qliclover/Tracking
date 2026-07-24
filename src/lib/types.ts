@@ -15,6 +15,12 @@ export interface Expense {
   date: string
   /** ms timestamp of creation, used for stable sorting. */
   createdAt: number
+  /** How the expense was entered. Defaults to manual. */
+  source?: 'manual' | 'scan' | 'voice'
+  /** Merchant name when captured from a receipt or voice note. */
+  merchant?: string
+  /** Line items when captured from a receipt. */
+  items?: { name: string; price: number }[]
 }
 
 export interface Settings {

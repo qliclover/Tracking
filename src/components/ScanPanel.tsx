@@ -1,0 +1,102 @@
+import { useRef, useState } from 'react'
+import { ExpenseDraft } from '../lib/receipt'
+import { scanReceipt } from '../lib/ai'
+import { ExpenseForm } from './ExpenseForm'
+import { DraftHeader } from './DraftHeader'
+
+interface Props {
+  currency: string
+  onAdd: (draft: ExpenseDraft) => void
+}
+
+export function ScanPanel({ currency, onAdd }: Props) {
+  const [image, setImage] = useState('')
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState('')
+  const [draft, setDraft] = useState<ExpenseDraft | null>(null)
+  const fileRef = useRef<HTMLInputElement>(null)
+
+  function pickFile(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    if (!file) return
+    const reader = new FileReader()
+    reader.onload = () => {
+      setImage(String(reader.result))
+      setDraft(null)
+      setError('')
+    }
+    reader.readAsDataURL(file)
+  }
+
+  async function scan() {
+    if (!image) return
+    setLoading(true)
+    setError('')
+    try {
+      setDraft(await scanReceipt(image))
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Scan failed.')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  if (draft) {
+    return (
+      <ExpenseForm
+        currency={currency}
+        initial={draft}
+        submitLabel="Save expense"
+        header={<DraftHeader draft={draft} currency={currency} />}
+        onCancel={() => {
+          setDraft(null)
+          setImage('')
+        }}
+        onSubmit={(d) => {
+          onAdd(d)
+          setDraft(null)
+          setImage('')
+        }}
+      />
+    )
+  }
+
+  return (
+    <div>
+      <input
+        ref={fileRef}
+        type="file"
+        accept="image/*"
+        capture="environment"
+        onChange={pickFile}
+        style={{ display: 'none' }}
+      />
+
+      {image ? (
+        <div className="scan-preview" onClick={() => fileRef.current?.click()}>
+          <img src={image} alt="Receipt preview" />
+          <span className="scan-retake">Tap to retake</span>
+        </div>
+      ) : (
+        <button type="button" className="dropzone" onClick={() => fileRef.current?.click()}>
+          <span className="serif" style={{ fontSize: 26 }}>Snap a receipt</span>
+          <span className="muted">Take a photo or choose an image</span>
+        </button>
+      )}
+
+      {error && <p className="error" style={{ marginTop: 12 }}>{error}</p>}
+
+      {image && (
+        <button
+          type="button"
+          className="btn btn-primary"
+          style={{ marginTop: 16 }}
+          onClick={scan}
+          disabled={loading}
+        >
+          {loading ? 'Reading…' : 'Read receipt'}
+        </button>
+      )}
+    </div>
+  )
+}

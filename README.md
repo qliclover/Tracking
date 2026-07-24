@@ -24,8 +24,15 @@ one running total, and one clear answer to "can I afford this right now?"
   "careful" to "over budget" based on your threshold.
 - **Automatic month view** — the app always shows the current calendar month;
   past expenses stay in history.
-- **Local & private** — everything is stored in your browser via
-  `localStorage`. No accounts, no server, no data leaves your device.
+- **Scan a receipt** — snap a photo and an AI vision model (Claude) reads the
+  merchant, line items, tax, tip, and total, then drops it into an editable
+  draft you confirm in one tap.
+- **Speak an expense** — tap the mic and say "twelve forty on lunch today"; the
+  browser transcribes it and Claude turns it into a structured entry. Works in
+  any language.
+- **Local & private** — your budget and expenses are stored in your browser via
+  `localStorage`. Only receipt images / voice transcripts you explicitly scan
+  are sent to the AI endpoint; nothing else leaves your device.
 - **Installable** — it's a PWA, so you can add it to your phone's home screen.
 
 ## Design
@@ -48,25 +55,57 @@ family.
 
 ```bash
 npm install
-npm run dev      # start the dev server (http://localhost:5173)
+npm run dev      # UI only (http://localhost:5173) — no AI endpoints
 npm run build    # type-check + production build into dist/
 npm run preview  # preview the production build locally
 ```
 
+### Enabling Scan + Voice (the AI features)
+
+The scan and voice features call serverless functions in `api/`, which need an
+Anthropic API key. They run on Vercel (or locally via the Vercel CLI):
+
+```bash
+cp .env.example .env.local     # then paste your ANTHROPIC_API_KEY
+npm i -g vercel
+vercel dev                     # serves the app AND the /api functions
+```
+
+Deploy with `vercel` (or connect the repo in the Vercel dashboard) and set
+`ANTHROPIC_API_KEY` in the project's Environment Variables. Plain `npm run dev`
+still works for everything except the AI endpoints — those will show a friendly
+"AI not configured" message.
+
+> Note: voice dictation uses the browser's Web Speech API for speech-to-text
+> (best support in Chrome and Safari); the transcript is then parsed by Claude.
+> If the API isn't available, the Speak tab falls back to a text field.
+
 ## Project structure
 
 ```
+api/                 # Vercel serverless functions (AI)
+  _lib.ts            # shared model config + categories
+  receipt.ts         # POST image  → structured receipt (Claude vision)
+  voice.ts           # POST transcript → structured expense (Claude)
 src/
   lib/
     types.ts          # domain types (Expense, Settings, AppState)
+    receipt.ts        # receipt + draft shapes, receiptSummary
+    ai.ts             # client calls to /api/receipt and /api/voice
+    useSpeech.ts      # Web Speech API dictation hook
     storage.ts        # localStorage load/save + id helpers
     budget.ts         # month math, budget summary, reminder logic
     format.ts         # money / date formatting helpers
-    theme.ts          # light / dark / system theme handling
+    categories.ts     # the fixed category list
     categoryColors.ts # earthy dot palette
+    theme.ts          # light / dark / system theme handling
   components/
     BudgetCard.tsx     # the serif "left to spend" hero + reminder
-    AddExpense.tsx     # the log-an-expense form
+    EntrySection.tsx   # Type / Scan / Speak segmented control
+    ExpenseForm.tsx    # reusable editable expense form
+    ScanPanel.tsx      # receipt capture → scan → confirm
+    VoicePanel.tsx     # dictation → analyze → confirm
+    DraftHeader.tsx    # merchant / items readout above a draft
     ExpenseList.tsx    # this month's ledger rows
     SettingsDialog.tsx # budget / currency / warn threshold / theme
   App.tsx         # state, persistence, and layout

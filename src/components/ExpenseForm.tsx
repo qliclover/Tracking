@@ -1,20 +1,30 @@
-import { FormEvent, useState } from 'react'
-import { Expense } from '../lib/types'
+import { FormEvent, ReactNode, useState } from 'react'
+import { ExpenseDraft } from '../lib/receipt'
 import { todayISO } from '../lib/format'
 import { categoryColor } from '../lib/categoryColors'
+import { QUICK_CATEGORIES } from '../lib/categories'
 
 interface Props {
   currency: string
-  onAdd: (input: Omit<Expense, 'id' | 'createdAt'>) => void
+  initial?: Partial<ExpenseDraft>
+  submitLabel?: string
+  onSubmit: (draft: ExpenseDraft) => void
+  onCancel?: () => void
+  header?: ReactNode
 }
 
-export const QUICK_CATEGORIES = ['Food', 'Transport', 'Shopping', 'Bills', 'Fun', 'Other']
-
-export function AddExpense({ currency, onAdd }: Props) {
-  const [amount, setAmount] = useState('')
-  const [category, setCategory] = useState('Food')
-  const [note, setNote] = useState('')
-  const [date, setDate] = useState(todayISO())
+export function ExpenseForm({
+  currency,
+  initial,
+  submitLabel = 'Record it',
+  onSubmit,
+  onCancel,
+  header,
+}: Props) {
+  const [amount, setAmount] = useState(initial?.amount ? String(initial.amount) : '')
+  const [category, setCategory] = useState(initial?.category ?? 'Food')
+  const [note, setNote] = useState(initial?.note ?? '')
+  const [date, setDate] = useState(initial?.date ?? todayISO())
   const [error, setError] = useState('')
 
   function submit(e: FormEvent) {
@@ -24,20 +34,25 @@ export function AddExpense({ currency, onAdd }: Props) {
       setError('Enter an amount greater than 0.')
       return
     }
-    onAdd({
+    onSubmit({
       amount: Math.round(value * 100) / 100,
       category: category.trim() || 'Other',
-      note: note.trim() || undefined,
+      note: note.trim(),
       date,
+      merchant: initial?.merchant,
+      items: initial?.items,
+      source: initial?.source ?? 'manual',
     })
-    setAmount('')
-    setNote('')
+    if (!onCancel) {
+      setAmount('')
+      setNote('')
+    }
     setError('')
   }
 
   return (
     <form onSubmit={submit}>
-      <p className="section-head">New entry</p>
+      {header}
 
       <div className="field amount">
         <label className="flabel" htmlFor="amount">Amount</label>
@@ -79,20 +94,22 @@ export function AddExpense({ currency, onAdd }: Props) {
         </div>
         <div className="field">
           <label className="flabel" htmlFor="date">Date</label>
-          <input
-            id="date"
-            type="date"
-            value={date}
-            onChange={(e) => setDate(e.target.value)}
-          />
+          <input id="date" type="date" value={date} onChange={(e) => setDate(e.target.value)} />
         </div>
       </div>
 
       {error && <p className="error">{error}</p>}
 
-      <button type="submit" className="btn btn-primary">
-        Record it
-      </button>
+      <div className={onCancel ? 'sheet-actions' : ''}>
+        {onCancel && (
+          <button type="button" className="btn btn-ghost" onClick={onCancel}>
+            Discard
+          </button>
+        )}
+        <button type="submit" className="btn btn-primary">
+          {submitLabel}
+        </button>
+      </div>
     </form>
   )
 }

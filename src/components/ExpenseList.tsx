@@ -1,7 +1,7 @@
 import { Expense } from '../lib/types'
 import { signedMoney, prettyDate } from '../lib/format'
 import { categoryColor } from '../lib/categoryColors'
-import { QUICK_CATEGORIES } from './AddExpense'
+import { QUICK_CATEGORIES } from '../lib/categories'
 
 interface Props {
   expenses: Expense[]
