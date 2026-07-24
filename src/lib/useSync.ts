@@ -1,18 +1,18 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { AppState } from './types'
 import {
-  currentEmail,
-  isCloudConfigured,
+  confirmSignUp,
+  currentUsername,
   isLoggedIn,
   logIn,
   logOut,
   pull,
   push,
-  requestPasswordReset,
+  resendCode,
   signUp,
 } from './sync'
 
-export type SyncStatus = 'off' | 'loggedOut' | 'connecting' | 'synced' | 'syncing' | 'error'
+export type SyncStatus = 'loggedOut' | 'connecting' | 'synced' | 'syncing' | 'error'
 
 interface Options {
   state: AppState
@@ -20,16 +20,11 @@ interface Options {
   onRemote: (remote: AppState) => void
 }
 
-/**
- * Drives optional cloud sync. No-op when cloud isn't configured, and idle
- * until the user logs in (a real account, so it can follow them to a new
- * device rather than being pinned to this one).
- */
+/** Drives account-based cloud sync (Cognito + DynamoDB via our own /api routes). */
 export function useSync({ state, onRemote }: Options) {
-  const configured = isCloudConfigured()
-  const [status, setStatus] = useState<SyncStatus>(configured ? 'connecting' : 'off')
+  const [status, setStatus] = useState<SyncStatus>('connecting')
   const [lastError, setLastError] = useState('')
-  const [email, setEmail] = useState<string | null>(null)
+  const [username, setUsername] = useState<string | null>(null)
   const bootstrapped = useRef(false)
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const lastPushed = useRef(0)
@@ -48,32 +43,28 @@ export function useSync({ state, onRemote }: Options) {
         lastPushed.current = stateRef.current.updatedAt
       }
       setStatus('synced')
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    } catch (e: any) {
+    } catch (e) {
       setLastError(e instanceof Error ? e.message : 'Sync failed.')
       setStatus('error')
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [onRemote])
 
-  // Initial: pick up an existing session (if any) and reconcile.
+  // Pick up an existing session (if any) and reconcile.
   useEffect(() => {
-    if (!configured || bootstrapped.current) return
+    if (bootstrapped.current) return
     bootstrapped.current = true
-    ;(async () => {
-      const loggedIn = await isLoggedIn()
-      if (!loggedIn) {
-        setStatus('loggedOut')
-        return
-      }
-      setEmail(await currentEmail())
-      await reconcile()
-    })()
-  }, [configured, reconcile])
+    if (!isLoggedIn()) {
+      setStatus('loggedOut')
+      return
+    }
+    setUsername(currentUsername())
+    reconcile()
+  }, [reconcile])
 
   // Debounced push on local change.
   useEffect(() => {
-    if (!configured || status === 'loggedOut' || !bootstrapped.current) return
+    if (status === 'loggedOut' || !bootstrapped.current) return
     if (state.updatedAt <= lastPushed.current) return
     if (timer.current) clearTimeout(timer.current)
     timer.current = setTimeout(async () => {
@@ -90,37 +81,42 @@ export function useSync({ state, onRemote }: Options) {
     return () => {
       if (timer.current) clearTimeout(timer.current)
     }
-  }, [state, configured, status])
+  }, [state, status])
 
   async function syncNow() {
-    if (!configured || status === 'loggedOut') return
+    if (status === 'loggedOut') return
     await reconcile()
   }
 
-  async function login(emailAddr: string, password: string) {
+  async function login(u: string, password: string) {
     setLastError('')
-    await logIn(emailAddr, password)
-    setEmail(emailAddr)
+    await logIn(u, password)
+    setUsername(u)
     await reconcile()
   }
 
-  async function signup(emailAddr: string, password: string) {
+  async function signup(u: string, email: string, password: string) {
     setLastError('')
-    await signUp(emailAddr, password)
-    setEmail(emailAddr)
-    lastPushed.current = 0
-    await reconcile()
+    await signUp(u, email, password)
+  }
+
+  /** Confirm the code emailed on signup, then log straight in. */
+  async function confirm(u: string, code: string, password: string) {
+    setLastError('')
+    await confirmSignUp(u, code)
+    await login(u, password)
+  }
+
+  async function resend(u: string) {
+    await resendCode(u)
   }
 
   async function logout() {
     await logOut()
-    setEmail(null)
+    setUsername(null)
+    lastPushed.current = 0
     setStatus('loggedOut')
   }
 
-  async function resetPassword(emailAddr: string) {
-    await requestPasswordReset(emailAddr)
-  }
-
-  return { status, lastError, email, syncNow, configured, login, signup, logout, resetPassword }
+  return { status, lastError, username, syncNow, login, signup, confirm, resend, logout }
 }

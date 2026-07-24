@@ -13,16 +13,17 @@
   },
   "dependencies": {
     "@ai-sdk/openai-compatible": "^0.2.16",
+    "@aws-sdk/client-cognito-identity-provider": "^3.1095.0",
+    "@aws-sdk/client-dynamodb": "^3.1095.0",
+    "@aws-sdk/lib-dynamodb": "^3.1095.0",
     "@capacitor/app": "^8.1.1",
     "@capacitor/core": "^8.4.2",
     "@capacitor/ios": "^8.4.2",
     "ai": "^4.3.19",
+    "aws-jwt-verify": "^5.2.1",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "zod": "^3.24.1"
-  },
-  "optionalDependencies": {
-    "leancloud-storage": "^4.15.2"
   },
   "devDependencies": {
     "@capacitor/cli": "^8.4.2",

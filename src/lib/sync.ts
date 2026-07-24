@@ -1,115 +1,133 @@
 import { AppState } from './types'
 
 /**
- * Optional cloud sync via LeanCloud (国内版). Entirely gated by env vars — when
- * they're absent the app is 100% local and none of this code runs.
- *
- * Strategy: a real email+password account (not anonymous — anonymous logins
- * are per-device and can't be reunited across devices). The whole AppState is
- * stored as one JSON document per user. Sync is last-write-wins on updatedAt.
+ * Cloud sync via our own /api/auth + /api/state routes, which proxy to
+ * Cognito (accounts) and DynamoDB (data). The browser never talks to AWS
+ * directly or holds AWS credentials — only a Cognito access/refresh token
+ * pair, so this works the same in the native app and on the web.
  */
 
-const env = {
-  appId: import.meta.env.VITE_LEANCLOUD_APP_ID as string | undefined,
-  appKey: import.meta.env.VITE_LEANCLOUD_APP_KEY as string | undefined,
-  serverURL: import.meta.env.VITE_LEANCLOUD_SERVER_URL as string | undefined,
+const TOKENS_KEY = 'margin.cloud.tokens'
+const USERNAME_KEY = 'margin.cloud.username'
+
+interface Tokens {
+  accessToken: string
+  idToken: string
+  refreshToken?: string
 }
 
-const CLASS = 'MarginState'
-const OBJ_KEY = 'margin.cloud.objectId'
-
-export function isCloudConfigured(): boolean {
-  return Boolean(env.appId && env.appKey)
-}
-
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-let AV: any = null
-let inited = false
-
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-async function ensure(): Promise<any> {
-  if (!isCloudConfigured()) throw new Error('Cloud sync is not configured.')
-  if (inited) return AV
-  const mod = await import('leancloud-storage')
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  AV = (mod as any).default ?? mod
-  AV.init({ appId: env.appId, appKey: env.appKey, serverURL: env.serverURL || undefined })
-  inited = true
-  return AV
-}
-
-export async function isLoggedIn(): Promise<boolean> {
-  const av = await ensure()
-  return Boolean(av.User.current())
-}
-
-export async function currentEmail(): Promise<string | null> {
-  const av = await ensure()
-  return av.User.current()?.getEmail() ?? av.User.current()?.getUsername() ?? null
-}
-
-export async function signUp(email: string, password: string): Promise<void> {
-  const av = await ensure()
-  const user = new av.User()
-  user.setUsername(email)
-  user.setEmail(email)
-  user.setPassword(password)
-  await user.signUp()
-  localStorage.removeItem(OBJ_KEY)
-}
-
-export async function logIn(email: string, password: string): Promise<void> {
-  const av = await ensure()
-  await av.User.logIn(email, password)
-  localStorage.removeItem(OBJ_KEY)
-}
-
-export async function logOut(): Promise<void> {
-  const av = await ensure()
-  await av.User.logOut()
-  localStorage.removeItem(OBJ_KEY)
-}
-
-export async function requestPasswordReset(email: string): Promise<void> {
-  const av = await ensure()
-  await av.User.requestPasswordReset(email)
-}
-
-/** Fetch the remote state, or null if none exists yet. */
-export async function pull(): Promise<AppState | null> {
-  const av = await ensure()
-  const user = av.User.current()
-  if (!user) return null
-  const query = new av.Query(CLASS)
-  query.equalTo('owner', user)
-  const obj = await query.first()
-  if (!obj) return null
-  localStorage.setItem(OBJ_KEY, obj.id)
+function loadTokens(): Tokens | null {
   try {
-    return JSON.parse(obj.get('data')) as AppState
+    const raw = localStorage.getItem(TOKENS_KEY)
+    return raw ? (JSON.parse(raw) as Tokens) : null
   } catch {
     return null
   }
 }
 
+function saveTokens(t: Tokens): void {
+  localStorage.setItem(TOKENS_KEY, JSON.stringify(t))
+}
+
+function clearTokens(): void {
+  localStorage.removeItem(TOKENS_KEY)
+  localStorage.removeItem(USERNAME_KEY)
+}
+
+export function isLoggedIn(): boolean {
+  return Boolean(loadTokens())
+}
+
+export function currentUsername(): string | null {
+  return localStorage.getItem(USERNAME_KEY)
+}
+
+async function authCall<T>(body: Record<string, unknown>): Promise<T> {
+  let res: Response
+  try {
+    res = await fetch('/api/auth', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    })
+  } catch {
+    throw new Error("Can't reach the sync service.")
+  }
+  const data = (await res.json().catch(() => ({}))) as T & { error?: string }
+  if (!res.ok) throw new Error(data.error || `Request failed (${res.status}).`)
+  return data
+}
+
+export async function signUp(username: string, email: string, password: string): Promise<void> {
+  await authCall({ action: 'signup', username, email, password })
+  localStorage.setItem(USERNAME_KEY, username)
+}
+
+export async function confirmSignUp(username: string, code: string): Promise<void> {
+  await authCall({ action: 'confirm', username, code })
+}
+
+export async function resendCode(username: string): Promise<void> {
+  await authCall({ action: 'resend', username })
+}
+
+export async function logIn(username: string, password: string): Promise<void> {
+  const t = await authCall<Tokens>({ action: 'login', username, password })
+  saveTokens(t)
+  localStorage.setItem(USERNAME_KEY, username)
+}
+
+export async function logOut(): Promise<void> {
+  clearTokens()
+}
+
+async function refresh(): Promise<Tokens | null> {
+  const t = loadTokens()
+  const username = currentUsername()
+  if (!t?.refreshToken || !username) return null
+  try {
+    const next = await authCall<{ accessToken: string; idToken: string }>({
+      action: 'refresh',
+      username,
+      refreshToken: t.refreshToken,
+    })
+    const merged = { ...t, ...next }
+    saveTokens(merged)
+    return merged
+  } catch {
+    clearTokens()
+    return null
+  }
+}
+
+async function stateCall(method: 'GET' | 'PUT', body?: unknown): Promise<Response> {
+  let tokens = loadTokens()
+  if (!tokens) throw new Error('Not logged in.')
+  const call = () =>
+    fetch('/api/state', {
+      method,
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${tokens!.accessToken}` },
+      body: body ? JSON.stringify(body) : undefined,
+    })
+  let res = await call()
+  if (res.status === 401) {
+    tokens = await refresh()
+    if (!tokens) throw new Error('Session expired. Please log in again.')
+    res = await call()
+  }
+  return res
+}
+
+/** Fetch the remote state, or null if none exists yet. */
+export async function pull(): Promise<AppState | null> {
+  const res = await stateCall('GET')
+  if (!res.ok) throw new Error(`Pull failed (${res.status}).`)
+  const data = (await res.json()) as { state: AppState | null }
+  return data.state
+}
+
 /** Write the full state to the cloud. */
 export async function push(state: AppState): Promise<void> {
-  const av = await ensure()
-  const user = av.User.current()
-  if (!user) throw new Error('Not logged in.')
-  const id = localStorage.getItem(OBJ_KEY)
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  let obj: any
-  if (id) {
-    obj = av.Object.createWithoutData(CLASS, id)
-  } else {
-    const Cls = av.Object.extend(CLASS)
-    obj = new Cls()
-    obj.set('owner', user)
-    obj.setACL(new av.ACL(user))
-  }
-  obj.set('data', JSON.stringify(state))
-  obj.set('stamp', state.updatedAt)
-  const saved = await obj.save()
-  localStorage.setItem(OBJ_KEY, saved.id)
+  const res = await stateCall('PUT', { state })
+  if (!res.ok) throw new Error(`Push failed (${res.status}).`)
 }
