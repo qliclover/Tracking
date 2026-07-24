@@ -2,11 +2,13 @@ import { FormEvent, ReactNode, useState } from 'react'
 import { ExpenseDraft } from '../lib/receipt'
 import { todayISO } from '../lib/format'
 import { categoryColor } from '../lib/categoryColors'
-import { QUICK_CATEGORIES } from '../lib/categories'
-import { useT, categoryLabel, useLang } from '../lib/i18n'
+import { categoryDisplay } from '../lib/categories'
+import { Category } from '../lib/types'
+import { useT, useLang } from '../lib/i18n'
 
 interface Props {
   currency: string
+  categories: Category[]
   initial?: Partial<ExpenseDraft>
   submitKey?: string
   onSubmit: (draft: ExpenseDraft) => void
@@ -16,6 +18,7 @@ interface Props {
 
 export function ExpenseForm({
   currency,
+  categories,
   initial,
   submitKey = 'record_it',
   onSubmit,
@@ -25,7 +28,7 @@ export function ExpenseForm({
   const t = useT()
   const lang = useLang()
   const [amount, setAmount] = useState(initial?.amount ? String(initial.amount) : '')
-  const [category, setCategory] = useState(initial?.category ?? 'Food')
+  const [category, setCategory] = useState(initial?.category ?? categories[0]?.name ?? '')
   const [note, setNote] = useState(initial?.note ?? '')
   const [date, setDate] = useState(initial?.date ?? todayISO())
   const [error, setError] = useState('')
@@ -39,7 +42,7 @@ export function ExpenseForm({
     }
     onSubmit({
       amount: Math.round(value * 100) / 100,
-      category: category.trim() || 'Other',
+      category: category.trim() || categories[categories.length - 1]?.name || '',
       note: note.trim(),
       date,
       merchant: initial?.merchant,
@@ -72,15 +75,15 @@ export function ExpenseForm({
       </div>
 
       <div className="cat-grid">
-        {QUICK_CATEGORIES.map((c) => (
+        {categories.map((c) => (
           <button
             type="button"
-            key={c}
-            className={`cat ${category === c ? 'active' : ''}`}
-            onClick={() => setCategory(c)}
+            key={c.name}
+            className={`cat ${category === c.name ? 'active' : ''}`}
+            onClick={() => setCategory(c.name)}
           >
-            <span className="dot" style={{ background: categoryColor(c, QUICK_CATEGORIES) }} />
-            {categoryLabel(c, lang)}
+            <span className="dot" style={{ background: categoryColor(c.name, categories) }} />
+            {categoryDisplay(c.name, lang)}
           </button>
         ))}
       </div>

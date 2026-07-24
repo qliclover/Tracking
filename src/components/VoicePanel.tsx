@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { ExpenseDraft } from '../lib/receipt'
 import { analyzeVoice } from '../lib/ai'
+import { Category } from '../lib/types'
 import { useSpeech } from '../lib/useSpeech'
 import { useT, useLang } from '../lib/i18n'
 import { ExpenseForm } from './ExpenseForm'
@@ -8,10 +9,11 @@ import { DraftHeader } from './DraftHeader'
 
 interface Props {
   currency: string
+  categories: Category[]
   onAdd: (draft: ExpenseDraft) => void
 }
 
-export function VoicePanel({ currency, onAdd }: Props) {
+export function VoicePanel({ currency, categories, onAdd }: Props) {
   const t = useT()
   const lang = useLang()
   const speech = useSpeech(lang === 'zh' ? 'zh-CN' : 'en-US')
@@ -33,7 +35,7 @@ export function VoicePanel({ currency, onAdd }: Props) {
     setLoading(true)
     setError('')
     try {
-      setDraft(await analyzeVoice(tr))
+      setDraft(await analyzeVoice(tr, categories))
     } catch (err) {
       setError(err instanceof Error ? err.message : t('analyze_failed'))
     } finally {
@@ -45,6 +47,7 @@ export function VoicePanel({ currency, onAdd }: Props) {
     return (
       <ExpenseForm
         currency={currency}
+        categories={categories}
         initial={draft}
         submitKey="save_expense"
         header={<DraftHeader draft={draft} currency={currency} />}

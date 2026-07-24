@@ -40,3 +40,11 @@ ios/App/*.xcworkspace/xcuserdata/
 ios/App/App.xcodeproj/xcuserdata/
 ios/App/App.xcodeproj/project.xcworkspace/xcuserdata/
 *.xcuserstate
+.vercel
+*.mobileprovision
+
+# Local build output / design & marketing asset exports (not source)
+/build/
+/img/
+/exports/
+/exports 2/

@@ -1,5 +1,5 @@
 import { useRef, useState } from 'react'
-import { Profile, Recurring, Settings } from '../lib/types'
+import { Category, Profile, Recurring, Settings } from '../lib/types'
 import { Theme } from '../lib/theme'
 import { CURRENCIES } from '../lib/currencies'
 import { fileToAvatar } from '../lib/image'
@@ -10,11 +10,13 @@ import { RecurringBills } from './RecurringBills'
 interface Props {
   settings: Settings
   profile: Profile
+  categories: Category[]
   recurring: Recurring[]
   theme: Theme
   sync: { status: SyncStatus; configured: boolean; syncNow: () => void; lastError: string }
   onSettings: (s: Settings) => void
   onProfile: (p: Profile) => void
+  onOpenCategories: () => void
   onAddRecurring: (input: Omit<Recurring, 'id' | 'createdAt'>) => void
   onUpdateRecurring: (id: string, patch: Partial<Recurring>) => void
   onDeleteRecurring: (id: string) => void
@@ -42,11 +44,13 @@ const SYNC_TK: Record<SyncStatus, string> = {
 export function SettingsPage({
   settings,
   profile,
+  categories,
   recurring,
   theme,
   sync,
   onSettings,
   onProfile,
+  onOpenCategories,
   onAddRecurring,
   onUpdateRecurring,
   onDeleteRecurring,
@@ -170,8 +174,23 @@ export function SettingsPage({
         <p className="muted" style={{ marginTop: -4 }}>{t('reset_hint')}</p>
       </section>
 
+      <section className="setting-block">
+        <p className="section-head">{t('manage_categories')}</p>
+        <button
+          className="row"
+          style={{ width: '100%', background: 'none', border: 'none', textAlign: 'left', cursor: 'pointer', padding: '4px 0' }}
+          onClick={onOpenCategories}
+        >
+          <div className="r-text">
+            <div className="r-title" style={{ fontSize: 15 }}>{t('category_count', { v: categories.length })}</div>
+          </div>
+          <span className="muted" style={{ fontSize: 18 }}>›</span>
+        </button>
+      </section>
+
       <RecurringBills
         currency={settings.currency}
+        categories={categories}
         recurring={recurring}
         onAdd={onAddRecurring}
         onUpdate={onUpdateRecurring}

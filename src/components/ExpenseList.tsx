@@ -1,42 +1,54 @@
-import { Expense } from '../lib/types'
+import { useEffect, useState } from 'react'
+import { Category, Expense } from '../lib/types'
 import { signedMoney, prettyDate } from '../lib/format'
 import { categoryColor } from '../lib/categoryColors'
-import { QUICK_CATEGORIES } from '../lib/categories'
-import { useT, useLang, categoryLabel } from '../lib/i18n'
+import { categoryDisplay } from '../lib/categories'
+import { useT, useLang } from '../lib/i18n'
+
+const PAGE_SIZE = 15
 
 interface Props {
   expenses: Expense[]
+  categories: Category[]
   currency: string
   onDelete: (id: string) => void
 }
 
-export function ExpenseList({ expenses, currency, onDelete }: Props) {
+export function ExpenseList({ expenses, categories, currency, onDelete }: Props) {
   const t = useT()
   const lang = useLang()
+  const [page, setPage] = useState(0)
+
+  useEffect(() => {
+    setPage(0)
+  }, [expenses])
 
   if (expenses.length === 0) {
     return (
       <section className="empty">
-        <span className="serif cjk">{t('empty_title')}</span>
         <p>{t('empty_sub')}</p>
       </section>
     )
   }
 
+  const totalPages = Math.max(1, Math.ceil(expenses.length / PAGE_SIZE))
+  const clampedPage = Math.min(page, totalPages - 1)
+  const shown = expenses.slice(clampedPage * PAGE_SIZE, (clampedPage + 1) * PAGE_SIZE)
+
   return (
     <section>
       <ul style={{ listStyle: 'none', margin: 0, padding: 0 }}>
-        {expenses.map((e) => (
+        {shown.map((e) => (
           <li key={e.id} className="row">
             <div className="r-main">
               <span
                 className="dot"
-                style={{ background: categoryColor(e.category, QUICK_CATEGORIES) }}
+                style={{ background: categoryColor(e.category, categories) }}
               />
               <div className="r-text">
-                <div className="r-title">{e.note || categoryLabel(e.category, lang)}</div>
+                <div className="r-title">{e.note || categoryDisplay(e.category, lang)}</div>
                 <div className="r-sub">
-                  {categoryLabel(e.category, lang)} · {prettyDate(e.date, lang)}
+                  {categoryDisplay(e.category, lang)} · {prettyDate(e.date, lang)}
                 </div>
               </div>
             </div>
@@ -52,6 +64,26 @@ export function ExpenseList({ expenses, currency, onDelete }: Props) {
           </li>
         ))}
       </ul>
+
+      {totalPages > 1 && (
+        <div className="pager">
+          <button
+            className="link"
+            disabled={clampedPage === 0}
+            onClick={() => setPage(clampedPage - 1)}
+          >
+            {t('page_prev')}
+          </button>
+          <span className="muted">{t('page_of', { a: clampedPage + 1, b: totalPages })}</span>
+          <button
+            className="link"
+            disabled={clampedPage >= totalPages - 1}
+            onClick={() => setPage(clampedPage + 1)}
+          >
+            {t('page_next')}
+          </button>
+        </div>
+      )}
     </section>
   )
 }

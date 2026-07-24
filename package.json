@@ -13,6 +13,7 @@
   },
   "dependencies": {
     "@ai-sdk/openai-compatible": "^0.2.16",
+    "@capacitor/app": "^8.1.1",
     "@capacitor/core": "^8.4.2",
     "@capacitor/ios": "^8.4.2",
     "ai": "^4.3.19",

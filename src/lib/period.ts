@@ -73,6 +73,11 @@ export function periodLabel(p: Period, resetDay: number, lang: 'zh' | 'en'): str
   return p.label
 }
 
+/** Just the month word, no year — e.g. "三月" or "Mar" — for compact widget headers. */
+export function periodMonthName(p: Period, lang: 'zh' | 'en'): string {
+  return lang === 'zh' ? ZH_MONTH[p.start.getMonth()] : MON[p.start.getMonth()]
+}
+
 export function isInPeriod(isoDate: string, p: Period): boolean {
   return isoDate >= iso(p.start) && isoDate < iso(p.end)
 }

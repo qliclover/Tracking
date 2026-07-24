@@ -1,26 +1,28 @@
 import { useState } from 'react'
-import { Recurring } from '../lib/types'
+import { Category, Recurring } from '../lib/types'
 import { money } from '../lib/format'
 import { categoryColor } from '../lib/categoryColors'
-import { QUICK_CATEGORIES } from '../lib/categories'
-import { useT, useLang, categoryLabel } from '../lib/i18n'
+import { categoryDisplay } from '../lib/categories'
+import { useT, useLang } from '../lib/i18n'
 
 interface Props {
   currency: string
+  categories: Category[]
   recurring: Recurring[]
   onAdd: (input: Omit<Recurring, 'id' | 'createdAt'>) => void
   onUpdate: (id: string, patch: Partial<Recurring>) => void
   onDelete: (id: string) => void
 }
 
-export function RecurringBills({ currency, recurring, onAdd, onUpdate, onDelete }: Props) {
+export function RecurringBills({ currency, categories, recurring, onAdd, onUpdate, onDelete }: Props) {
   const t = useT()
   const lang = useLang()
+  const defaultCategory = categories[3]?.name ?? categories[0]?.name ?? ''
   const [open, setOpen] = useState(false)
   const [name, setName] = useState('')
   const [amount, setAmount] = useState('')
   const [day, setDay] = useState('1')
-  const [category, setCategory] = useState('Bills')
+  const [category, setCategory] = useState(defaultCategory)
   const [error, setError] = useState('')
 
   function submit() {
@@ -39,7 +41,7 @@ export function RecurringBills({ currency, recurring, onAdd, onUpdate, onDelete 
     setName('')
     setAmount('')
     setDay('1')
-    setCategory('Bills')
+    setCategory(defaultCategory)
     setError('')
     setOpen(false)
   }
@@ -59,11 +61,11 @@ export function RecurringBills({ currency, recurring, onAdd, onUpdate, onDelete 
               <div className="r-main">
                 <span
                   className="dot"
-                  style={{ background: categoryColor(r.category, QUICK_CATEGORIES), opacity: r.active ? 1 : 0.35 }}
+                  style={{ background: categoryColor(r.category, categories), opacity: r.active ? 1 : 0.35 }}
                 />
                 <div className="r-text">
                   <div className="r-title" style={{ opacity: r.active ? 1 : 0.5 }}>{r.name}</div>
-                  <div className="r-sub">{t('day_of', { d: r.dayOfMonth, c: categoryLabel(r.category, lang) })}</div>
+                  <div className="r-sub">{t('day_of', { d: r.dayOfMonth, c: categoryDisplay(r.category, lang) })}</div>
                 </div>
               </div>
               <span className="r-amt" style={{ opacity: r.active ? 1 : 0.5 }}>{money(r.amount, currency)}</span>
@@ -93,10 +95,10 @@ export function RecurringBills({ currency, recurring, onAdd, onUpdate, onDelete 
             </div>
           </div>
           <div className="cat-grid">
-            {QUICK_CATEGORIES.map((c) => (
-              <button key={c} type="button" className={`cat ${category === c ? 'active' : ''}`} onClick={() => setCategory(c)}>
-                <span className="dot" style={{ background: categoryColor(c, QUICK_CATEGORIES) }} />
-                {categoryLabel(c, lang)}
+            {categories.map((c) => (
+              <button key={c.name} type="button" className={`cat ${category === c.name ? 'active' : ''}`} onClick={() => setCategory(c.name)}>
+                <span className="dot" style={{ background: categoryColor(c.name, categories) }} />
+                {categoryDisplay(c.name, lang)}
               </button>
             ))}
           </div>

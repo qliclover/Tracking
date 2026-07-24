@@ -1,6 +1,5 @@
-import { Expense } from './types'
+import { Category, Expense } from './types'
 import { Period } from './period'
-import { QUICK_CATEGORIES } from './categories'
 
 export interface CategoryStat {
   category: string
@@ -9,7 +8,7 @@ export interface CategoryStat {
 }
 
 /** Totals per category for the given expenses, sorted high → low. */
-export function categoryTotals(expenses: Expense[]): CategoryStat[] {
+export function categoryTotals(expenses: Expense[], categories: readonly Category[]): CategoryStat[] {
   const map = new Map<string, number>()
   let grand = 0
   for (const e of expenses) {
@@ -18,7 +17,7 @@ export function categoryTotals(expenses: Expense[]): CategoryStat[] {
     grand += a
   }
   const order = (c: string) => {
-    const i = QUICK_CATEGORIES.indexOf(c as (typeof QUICK_CATEGORIES)[number])
+    const i = categories.findIndex((cat) => cat.name === c)
     return i < 0 ? 999 : i
   }
   return [...map.entries()]

@@ -1,5 +1,7 @@
 import { ExpenseDraft, Receipt, receiptSummary } from './receipt'
 import { todayISO } from './format'
+import { Category } from './types'
+import { resolveAiCategory } from './categories'
 
 async function postJSON<T>(url: string, body: unknown): Promise<T> {
   let res: Response
@@ -21,18 +23,14 @@ async function postJSON<T>(url: string, body: unknown): Promise<T> {
   return (await res.json()) as T
 }
 
-function fallbackCategory(c: string | null | undefined): string {
-  return c && c.trim() ? c : 'Other'
-}
-
 /** Send a receipt image (data URL) and normalize the result into a draft. */
-export async function scanReceipt(imageDataUrl: string): Promise<ExpenseDraft> {
+export async function scanReceipt(imageDataUrl: string, categories: readonly Category[]): Promise<ExpenseDraft> {
   const { receipt } = await postJSON<{ receipt: Receipt }>('/api/receipt', {
     image: imageDataUrl,
   })
   return {
     amount: Math.abs(Number(receipt.total) || 0),
-    category: fallbackCategory(receipt.category),
+    category: resolveAiCategory(receipt.category, categories),
     note: receiptSummary(receipt),
     date: receipt.date || todayISO(),
     merchant: receipt.merchant || undefined,
@@ -50,11 +48,11 @@ interface VoiceDraft {
 }
 
 /** Send a spoken transcript and normalize the result into a draft. */
-export async function analyzeVoice(transcript: string): Promise<ExpenseDraft> {
+export async function analyzeVoice(transcript: string, categories: readonly Category[]): Promise<ExpenseDraft> {
   const { draft } = await postJSON<{ draft: VoiceDraft }>('/api/voice', { transcript })
   return {
     amount: Math.abs(Number(draft.amount) || 0),
-    category: fallbackCategory(draft.category),
+    category: resolveAiCategory(draft.category, categories),
     note: draft.note || transcript,
     date: draft.date || todayISO(),
     merchant: draft.merchant || undefined,

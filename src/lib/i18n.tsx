@@ -76,7 +76,6 @@ const DICT: Record<string, Entry> = {
   mic_unavailable: { zh: 'Mic unavailable · 已切到打字', en: 'Mic unavailable · switched to typing' },
 
   // Expense list
-  empty_title: { zh: '干净的一页。', en: 'A clean page.' },
   empty_sub: { zh: '在上面记下第一笔。', en: 'Record your first expense above.' },
   today: { zh: '今天', en: 'Today' },
 
@@ -132,6 +131,23 @@ const DICT: Record<string, Entry> = {
   err_bill_name: { zh: '给账单起个名字。', en: 'Give the bill a name.' },
   err_day: { zh: '日期需为 1–31。', en: 'Day must be 1–31.' },
 
+  // Categories (user-editable)
+  manage_categories: { zh: '分类', en: 'Categories' },
+  category_add_ph: { zh: '新分类名称', en: 'New category name' },
+  category_add: { zh: '+ 添加分类', en: '+ Add category' },
+  category_rename: { zh: '改名', en: 'Rename' },
+  category_last_one: { zh: '至少保留一个分类。', en: 'Keep at least one category.' },
+  category_count: { zh: '{v} 个分类', en: '{v} categories' },
+  category_hint: {
+    zh: '改名会同步更新已记录的账目;删除不会影响历史记录,只是以后选不到了。',
+    en: "Renaming updates past entries too; deleting doesn't touch history — it just won't show up as a choice anymore.",
+  },
+
+  // Pagination
+  page_prev: { zh: '上一页', en: 'Prev' },
+  page_next: { zh: '下一页', en: 'Next' },
+  page_of: { zh: '第 {a} / {b} 页', en: 'Page {a} of {b}' },
+
   // Stats
   tab_ledger: { zh: '账目', en: 'Ledger' },
   tab_stats: { zh: '统计', en: 'Stats' },
@@ -139,7 +155,6 @@ const DICT: Record<string, Entry> = {
   stat_perday: { zh: '日均 {v}', en: '{v}/day' },
   stat_by_category: { zh: '按分类', en: 'By category' },
   stat_daily: { zh: '每日花销', en: 'Daily spend' },
-  stat_empty: { zh: '这个周期还没有支出。', en: 'No spending this cycle yet.' },
 
   // Footer / brand
   tagline: { zh: '给自己留点余地', en: 'Room to spend' },

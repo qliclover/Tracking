@@ -1,16 +1,18 @@
 import { useRef, useState } from 'react'
 import { ExpenseDraft } from '../lib/receipt'
 import { scanReceipt } from '../lib/ai'
+import { Category } from '../lib/types'
 import { useT } from '../lib/i18n'
 import { ExpenseForm } from './ExpenseForm'
 import { DraftHeader } from './DraftHeader'
 
 interface Props {
   currency: string
+  categories: Category[]
   onAdd: (draft: ExpenseDraft) => void
 }
 
-export function ScanPanel({ currency, onAdd }: Props) {
+export function ScanPanel({ currency, categories, onAdd }: Props) {
   const t = useT()
   const [image, setImage] = useState('')
   const [loading, setLoading] = useState(false)
@@ -35,7 +37,7 @@ export function ScanPanel({ currency, onAdd }: Props) {
     setLoading(true)
     setError('')
     try {
-      setDraft(await scanReceipt(image))
+      setDraft(await scanReceipt(image, categories))
     } catch (err) {
       setError(err instanceof Error ? err.message : t('scan_failed'))
     } finally {
@@ -47,6 +49,7 @@ export function ScanPanel({ currency, onAdd }: Props) {
     return (
       <ExpenseForm
         currency={currency}
+        categories={categories}
         initial={draft}
         submitKey="save_expense"
         header={<DraftHeader draft={draft} currency={currency} />}

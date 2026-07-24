@@ -53,6 +53,14 @@ export interface Settings {
   lang: 'zh' | 'en'
 }
 
+/** A user-editable expense category — add, rename, or delete freely. */
+export interface Category {
+  /** Display text and the value stored on expenses/recurring bills. */
+  name: string
+  /** Stable dot color, assigned once when created (not by list position). */
+  color: string
+}
+
 export interface Profile {
   /** Display name shown in the header / settings. */
   name?: string
@@ -64,6 +72,8 @@ export interface AppState {
   settings: Settings
   expenses: Expense[]
   profile: Profile
+  /** User-editable expense categories, in display order. */
+  categories: Category[]
   /** Fixed recurring bills. */
   recurring: Recurring[]
   /** Occurrence keys (`recurringId:YYYY-MM-DD`) already posted, so a deleted

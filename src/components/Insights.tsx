@@ -1,31 +1,28 @@
-import { Expense } from '../lib/types'
+import { Category, Expense } from '../lib/types'
 import { Period } from '../lib/period'
 import { money } from '../lib/format'
 import { categoryColor } from '../lib/categoryColors'
-import { QUICK_CATEGORIES } from '../lib/categories'
+import { categoryDisplay } from '../lib/categories'
 import { categoryTotals, dailyTotals } from '../lib/stats'
-import { useT, useLang, categoryLabel } from '../lib/i18n'
+import { useT, useLang } from '../lib/i18n'
 
 interface Props {
   expenses: Expense[]
+  categories: Category[]
   period: Period
   currency: string
   daysElapsed: number
 }
 
-export function Insights({ expenses, period, currency, daysElapsed }: Props) {
+export function Insights({ expenses, categories, period, currency, daysElapsed }: Props) {
   const t = useT()
   const lang = useLang()
 
   if (expenses.length === 0) {
-    return (
-      <section className="empty">
-        <span className="serif cjk">{t('stat_empty')}</span>
-      </section>
-    )
+    return <section className="empty" />
   }
 
-  const cats = categoryTotals(expenses)
+  const cats = categoryTotals(expenses, categories)
   const total = cats.reduce((s, c) => s + c.total, 0)
   const perDay = daysElapsed > 0 ? total / daysElapsed : total
   const days = dailyTotals(expenses, period)
@@ -46,8 +43,8 @@ export function Insights({ expenses, period, currency, daysElapsed }: Props) {
           <li key={c.category}>
             <div className="cat-stat-top">
               <span className="cat-stat-name">
-                <span className="dot" style={{ background: categoryColor(c.category, QUICK_CATEGORIES) }} />
-                {categoryLabel(c.category, lang)}
+                <span className="dot" style={{ background: categoryColor(c.category, categories) }} />
+                {categoryDisplay(c.category, lang)}
               </span>
               <span className="cat-stat-amt">
                 {money(c.total, currency)} <span className="muted">{Math.round(c.pct * 100)}%</span>
@@ -56,7 +53,7 @@ export function Insights({ expenses, period, currency, daysElapsed }: Props) {
             <div className="cat-bar">
               <div
                 className="cat-bar-fill"
-                style={{ width: `${Math.max(2, c.pct * 100)}%`, background: categoryColor(c.category, QUICK_CATEGORIES) }}
+                style={{ width: `${Math.max(2, c.pct * 100)}%`, background: categoryColor(c.category, categories) }}
               />
             </div>
           </li>
