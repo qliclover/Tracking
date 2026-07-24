@@ -1,9 +1,9 @@
 {
-  "name": "tracking",
+  "name": "margin",
   "private": true,
   "version": "0.1.0",
   "type": "module",
-  "description": "A simple monthly-budget expense tracker: one budget, live reminders, and painless spend logging.",
+  "description": "Margin — your monthly room to spend: one budget, live reminders, receipt scanning, and voice entry.",
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",

@@ -1,6 +1,6 @@
 import { AppState, DEFAULT_SETTINGS, Expense } from './types'
 
-const STORAGE_KEY = 'tracking.appState.v1'
+const STORAGE_KEY = 'margin.appState.v1'
 
 const EMPTY_STATE: AppState = {
   settings: DEFAULT_SETTINGS,

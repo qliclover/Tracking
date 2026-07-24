@@ -1,6 +1,6 @@
 export type Theme = 'system' | 'light' | 'dark'
 
-const KEY = 'tracking.theme'
+const KEY = 'margin.theme'
 
 export function getTheme(): Theme {
   if (typeof window === 'undefined') return 'system'

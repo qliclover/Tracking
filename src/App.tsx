@@ -62,7 +62,10 @@ export default function App() {
   return (
     <div className="app">
       <header className="topbar">
-        <span className="month">{monthLabel(currentMonth)}</span>
+        <div>
+          <div className="wordmark serif">Margin</div>
+          <span className="month">{monthLabel(currentMonth)}</span>
+        </div>
         <button
           className="theme-toggle"
           onClick={() => setTheme((t) => nextTheme(t))}
@@ -97,7 +100,7 @@ export default function App() {
         Budget settings
       </button>
 
-      <footer className="footer">Keep a beautiful record</footer>
+      <footer className="footer">Room to spend</footer>
 
       {settingsOpen && (
         <SettingsDialog

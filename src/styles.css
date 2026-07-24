@@ -104,16 +104,28 @@ body {
 /* ---- Top bar ---- */
 .topbar {
   display: flex;
-  align-items: baseline;
+  align-items: flex-start;
   justify-content: space-between;
   margin-bottom: 26px;
 }
 
+.wordmark {
+  font-size: 22px;
+  line-height: 1;
+  letter-spacing: -0.3px;
+  margin-bottom: 5px;
+}
+
 .topbar .month {
+  display: block;
   font-size: 12px;
   letter-spacing: 1.8px;
   text-transform: uppercase;
   color: var(--muted);
+}
+
+.topbar .theme-toggle {
+  margin-top: 6px;
 }
 
 .theme-toggle {

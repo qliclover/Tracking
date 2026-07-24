@@ -1,4 +1,6 @@
-# Tracking
+# Margin
+
+*Your monthly room to spend.*
 
 A dead-simple monthly-budget expense tracker.
 
@@ -10,7 +12,7 @@ limit and warns you when you go over.
 
 ## Why it's different
 
-Most budgeting apps make you connect and reconcile every account. Tracking
+Most budgeting apps make you connect and reconcile every account. Margin
 deliberately does the opposite. Accounts are irrelevant. There is one budget,
 one running total, and one clear answer to "can I afford this right now?"
 

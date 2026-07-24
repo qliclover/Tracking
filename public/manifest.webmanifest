@@ -1,7 +1,7 @@
 {
-  "name": "Tracking · Keep a beautiful record",
-  "short_name": "Tracking",
-  "description": "One monthly budget, calmly tracked.",
+  "name": "Margin · Room to spend",
+  "short_name": "Margin",
+  "description": "Your monthly room to spend, calmly tracked.",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#faf9f7",

@@ -1,4 +1,4 @@
-// Core domain types for Tracking.
+// Core domain types for Margin.
 //
 // Design principle: the user has exactly ONE monthly budget, no matter how many
 // bank accounts or cards they own. Every expense is just a deduction against that
