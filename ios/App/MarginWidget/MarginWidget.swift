@@ -344,17 +344,47 @@ struct MarginWidget: Widget {
     }
 }
 
-// MARK: - Quick add widget
+// MARK: - Quick add widgets (记一笔 Widget.dc.html: A-F)
+
+/// Static timeline for widgets that don't need live budget data (deep-link launchers only).
+struct StaticProvider: TimelineProvider {
+    func placeholder(in context: Context) -> SummaryEntry { SummaryEntry(date: Date(), summary: .placeholder) }
+    func getSnapshot(in context: Context, completion: @escaping (SummaryEntry) -> Void) {
+        completion(SummaryEntry(date: Date(), summary: .placeholder))
+    }
+    func getTimeline(in context: Context, completion: @escaping (Timeline<SummaryEntry>) -> Void) {
+        completion(Timeline(entries: [SummaryEntry(date: Date(), summary: .placeholder)], policy: .never))
+    }
+}
+
+/// A custom "+" glyph built from two bars, matching the design spec (not an SF Symbol).
+struct PlusGlyph: View {
+    var color: Color
+    var length: CGFloat
+    var thickness: CGFloat
+    var body: some View {
+        ZStack {
+            RoundedRectangle(cornerRadius: thickness / 2).fill(color).frame(width: length, height: thickness)
+            RoundedRectangle(cornerRadius: thickness / 2).fill(color).frame(width: thickness, height: length)
+        }
+    }
+}
+
+// MARK: A · 三种方式
 
 struct QuickAddRow: View {
     var color: Color
     var label: String
     var url: URL
+    var round: Bool = false
 
     var body: some View {
         Link(destination: url) {
             HStack(spacing: 9) {
-                RoundedRectangle(cornerRadius: 2).fill(color).frame(width: 6, height: 6)
+                Group {
+                    if round { Circle().fill(color) } else { RoundedRectangle(cornerRadius: 2).fill(color) }
+                }
+                .frame(width: 6, height: 6)
                 Text(label).font(.system(size: 13)).foregroundColor(Color(hex: "f2efe9"))
                 Spacer(minLength: 0)
             }
@@ -375,7 +405,7 @@ struct QuickAddView: View {
             QuickAddRow(color: Color(hex: "a5735a"), label: "手动", url: URL(string: "margin://add?mode=type")!)
             HStack(spacing: 8) {
                 QuickAddRow(color: Color(hex: "6f7a4e"), label: "拍照", url: URL(string: "margin://add?mode=scan")!)
-                QuickAddRow(color: Color(hex: "e2705d"), label: "语音", url: URL(string: "margin://add?mode=speak")!)
+                QuickAddRow(color: Color(hex: "e2705d"), label: "语音", url: URL(string: "margin://add?mode=speak")!, round: true)
             }
         }
         .padding(15)
@@ -384,21 +414,11 @@ struct QuickAddView: View {
     }
 }
 
-struct QuickAddProvider: TimelineProvider {
-    func placeholder(in context: Context) -> SummaryEntry { SummaryEntry(date: Date(), summary: .placeholder) }
-    func getSnapshot(in context: Context, completion: @escaping (SummaryEntry) -> Void) {
-        completion(SummaryEntry(date: Date(), summary: .placeholder))
-    }
-    func getTimeline(in context: Context, completion: @escaping (Timeline<SummaryEntry>) -> Void) {
-        completion(Timeline(entries: [SummaryEntry(date: Date(), summary: .placeholder)], policy: .never))
-    }
-}
-
 struct MarginQuickAddWidget: Widget {
     let kind: String = "MarginQuickAddWidget"
 
     var body: some WidgetConfiguration {
-        StaticConfiguration(kind: kind, provider: QuickAddProvider()) { _ in
+        StaticConfiguration(kind: kind, provider: StaticProvider()) { _ in
             if #available(iOSApplicationExtension 17.0, *) {
                 QuickAddView().containerBackground(for: .widget) { Color.clear }
             } else {
@@ -411,10 +431,307 @@ struct MarginQuickAddWidget: Widget {
     }
 }
 
+// MARK: B · 一键新增
+
+struct QuickAddPlusView: View {
+    var entry: SummaryEntry
+    var body: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            HStack {
+                Text("记一笔")
+                    .font(.system(size: 18, weight: .semibold, design: .serif))
+                    .foregroundColor(Color(hex: "1a1a1a"))
+                Spacer()
+                WordmarkDot(fg: Color(hex: "1a1a1a"), accent: Color(hex: "c15b4a"), size: 13)
+            }
+            Spacer(minLength: 0)
+            HStack {
+                Spacer()
+                Link(destination: URL(string: "margin://add?mode=type")!) {
+                    ZStack {
+                        Circle().fill(Color(hex: "1a1a1a")).frame(width: 68, height: 68)
+                        PlusGlyph(color: Color(hex: "faf9f7"), length: 27, thickness: 3)
+                    }
+                }
+                Spacer()
+            }
+            Spacer(minLength: 0)
+            Text("还剩 \(entry.summary.remainingText) 可花")
+                .font(.system(size: 11.5))
+                .foregroundColor(Color(hex: "a3a09a"))
+                .lineLimit(1).minimumScaleFactor(0.8)
+                .frame(maxWidth: .infinity, alignment: .center)
+        }
+        .padding(15)
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+        .background(Color(hex: "faf9f7"))
+    }
+}
+
+struct MarginQuickAddPlusWidget: Widget {
+    let kind: String = "MarginQuickAddPlusWidget"
+
+    var body: some WidgetConfiguration {
+        StaticConfiguration(kind: kind, provider: SummaryProvider()) { entry in
+            if #available(iOSApplicationExtension 17.0, *) {
+                QuickAddPlusView(entry: entry).containerBackground(for: .widget) { Color.clear }
+            } else {
+                QuickAddPlusView(entry: entry)
+            }
+        }
+        .configurationDisplayName("有余 · 一键新增")
+        .description("点一下直接新增一笔,顺便看到本月剩余额度。")
+        .supportedFamilies([.systemSmall])
+    }
+}
+
+// MARK: C · 常用分类直达
+
+struct QuickCategoryChip: View {
+    var color: Color
+    var label: String
+    var url: URL
+    var body: some View {
+        Link(destination: url) {
+            HStack(spacing: 8) {
+                RoundedRectangle(cornerRadius: 2).fill(color).frame(width: 6, height: 6)
+                Text(label).font(.system(size: 12)).foregroundColor(Color(hex: "1a1a1a")).lineLimit(1)
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(.horizontal, 10).padding(.vertical, 9)
+            .background(Color(hex: "f2f0eb"))
+            .cornerRadius(9)
+        }
+    }
+}
+
+struct QuickCategoryView: View {
+    var body: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            Text("快速分类")
+                .font(.system(size: 18, weight: .semibold, design: .serif))
+                .foregroundColor(Color(hex: "1a1a1a"))
+            Spacer(minLength: 0)
+            LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 8) {
+                QuickCategoryChip(color: Color(hex: "a5735a"), label: "餐饮", url: URL(string: "margin://add?mode=type&category=Food")!)
+                QuickCategoryChip(color: Color(hex: "6f7a4e"), label: "交通", url: URL(string: "margin://add?mode=type&category=Transport")!)
+                QuickCategoryChip(color: Color(hex: "5e6b73"), label: "购物", url: URL(string: "margin://add?mode=type&category=Shopping")!)
+                QuickCategoryChip(color: Color(hex: "8a6d3c"), label: "娱乐", url: URL(string: "margin://add?mode=type&category=Fun")!)
+            }
+        }
+        .padding(15)
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+        .background(Color(hex: "faf9f7"))
+    }
+}
+
+struct MarginQuickCategoryWidget: Widget {
+    let kind: String = "MarginQuickCategoryWidget"
+
+    var body: some WidgetConfiguration {
+        StaticConfiguration(kind: kind, provider: StaticProvider()) { _ in
+            if #available(iOSApplicationExtension 17.0, *) {
+                QuickCategoryView().containerBackground(for: .widget) { Color.clear }
+            } else {
+                QuickCategoryView()
+            }
+        }
+        .configurationDisplayName("有余 · 快速分类")
+        .description("点常用分类直接开始记一笔。")
+        .supportedFamilies([.systemSmall])
+    }
+}
+
+// MARK: D · 语音直录
+
+struct VoiceBarsGlyph: View {
+    var color: Color
+    var body: some View {
+        HStack(alignment: .bottom, spacing: 5) {
+            Capsule().fill(color).opacity(0.75).frame(width: 5, height: 16)
+            Capsule().fill(color).opacity(0.85).frame(width: 5, height: 30)
+            Capsule().fill(color).frame(width: 5, height: 40)
+            Capsule().fill(color).opacity(0.85).frame(width: 5, height: 24)
+            Capsule().fill(color).opacity(0.9).frame(width: 5, height: 35)
+            Capsule().fill(color).opacity(0.7).frame(width: 5, height: 14)
+        }
+    }
+}
+
+struct QuickVoiceView: View {
+    var body: some View {
+        Link(destination: URL(string: "margin://add?mode=speak")!) {
+            VStack(spacing: 0) {
+                HStack {
+                    Text("说一句")
+                        .font(.system(size: 18, weight: .semibold, design: .serif))
+                        .foregroundColor(Color(hex: "faf9f7"))
+                    Spacer()
+                }
+                Spacer(minLength: 0)
+                VoiceBarsGlyph(color: Color(hex: "faf9f7"))
+                Spacer(minLength: 0)
+                Text("\"午饭花了 25 块\"")
+                    .font(.system(size: 11.5))
+                    .foregroundColor(Color(hex: "f4d9d2"))
+                    .lineLimit(1).minimumScaleFactor(0.8)
+                    .frame(maxWidth: .infinity, alignment: .center)
+            }
+            .padding(15)
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+            .background(Color(hex: "c15b4a"))
+        }
+        .buttonStyle(.plain)
+    }
+}
+
+struct MarginQuickVoiceWidget: Widget {
+    let kind: String = "MarginQuickVoiceWidget"
+
+    var body: some WidgetConfiguration {
+        StaticConfiguration(kind: kind, provider: StaticProvider()) { _ in
+            if #available(iOSApplicationExtension 17.0, *) {
+                QuickVoiceView().containerBackground(for: .widget) { Color.clear }
+            } else {
+                QuickVoiceView()
+            }
+        }
+        .configurationDisplayName("有余 · 语音记账")
+        .description("点一下直接开始说话记账。")
+        .supportedFamilies([.systemSmall])
+    }
+}
+
+// MARK: E · 拍小票
+
+struct QuickScanView: View {
+    var body: some View {
+        Link(destination: URL(string: "margin://add?mode=scan")!) {
+            VStack(spacing: 0) {
+                HStack {
+                    Text("拍小票")
+                        .font(.system(size: 18, weight: .semibold, design: .serif))
+                        .foregroundColor(Color(hex: "1a1a1a"))
+                    Spacer()
+                }
+                Spacer(minLength: 0)
+                HStack {
+                    Spacer()
+                    VStack(spacing: 6) {
+                        RoundedRectangle(cornerRadius: 3).fill(Color(hex: "c15b4a")).frame(width: 26, height: 3)
+                        RoundedRectangle(cornerRadius: 3).fill(Color(hex: "e6e4df")).frame(width: 34, height: 3)
+                        RoundedRectangle(cornerRadius: 3).fill(Color(hex: "e6e4df")).frame(width: 22, height: 3)
+                    }
+                    .frame(width: 66, height: 66)
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 10)
+                            .strokeBorder(Color(hex: "d9d6cf"), style: StrokeStyle(lineWidth: 2, dash: [5]))
+                    )
+                    Spacer()
+                }
+                Spacer(minLength: 0)
+                Text("AI 自动读金额")
+                    .font(.system(size: 11.5))
+                    .foregroundColor(Color(hex: "a3a09a"))
+                    .frame(maxWidth: .infinity, alignment: .center)
+            }
+            .padding(15)
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+            .background(Color(hex: "faf9f7"))
+        }
+        .buttonStyle(.plain)
+    }
+}
+
+struct MarginQuickScanWidget: Widget {
+    let kind: String = "MarginQuickScanWidget"
+
+    var body: some WidgetConfiguration {
+        StaticConfiguration(kind: kind, provider: StaticProvider()) { _ in
+            if #available(iOSApplicationExtension 17.0, *) {
+                QuickScanView().containerBackground(for: .widget) { Color.clear }
+            } else {
+                QuickScanView()
+            }
+        }
+        .configurationDisplayName("有余 · 拍照记账")
+        .description("点一下直接打开拍小票。")
+        .supportedFamilies([.systemSmall])
+    }
+}
+
+// MARK: F · 最近一笔 + 新增
+
+struct QuickRecentView: View {
+    var entry: SummaryEntry
+    var body: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            HStack {
+                Text("最近一笔")
+                    .font(.system(size: 10.5)).textCase(.uppercase).tracking(1)
+                    .foregroundColor(Color(hex: "a3a09a"))
+                Spacer()
+                Link(destination: URL(string: "margin://add?mode=type")!) {
+                    ZStack {
+                        Circle().fill(Color(hex: "1a1a1a")).frame(width: 24, height: 24)
+                        PlusGlyph(color: Color(hex: "faf9f7"), length: 11, thickness: 2)
+                    }
+                }
+            }
+            Spacer(minLength: 8)
+            if let first = entry.summary.recent.first {
+                HStack(spacing: 6) {
+                    RoundedRectangle(cornerRadius: 2).fill(Color(hex: first.color)).frame(width: 6, height: 6)
+                    Text(first.title).font(.system(size: 13)).foregroundColor(Color(hex: "1a1a1a")).lineLimit(1)
+                }
+                Text("−" + first.amountText)
+                    .font(.system(size: 28, design: .serif))
+                    .foregroundColor(Color(hex: "1a1a1a"))
+                    .lineLimit(1).minimumScaleFactor(0.7)
+                    .padding(.top, 2)
+            } else {
+                Spacer()
+                Text("还没有记录").font(.system(size: 13)).foregroundColor(Color(hex: "a3a09a"))
+            }
+            Spacer(minLength: 8)
+            Rectangle().fill(Color(hex: "eeece7")).frame(height: 1)
+            Text("点 + 再记一笔")
+                .font(.system(size: 10.5))
+                .foregroundColor(Color(hex: "a3a09a"))
+                .padding(.top, 6)
+        }
+        .padding(15)
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+        .background(Color(hex: "faf9f7"))
+    }
+}
+
+struct MarginQuickRecentWidget: Widget {
+    let kind: String = "MarginQuickRecentWidget"
+
+    var body: some WidgetConfiguration {
+        StaticConfiguration(kind: kind, provider: SummaryProvider()) { entry in
+            if #available(iOSApplicationExtension 17.0, *) {
+                QuickRecentView(entry: entry).containerBackground(for: .widget) { Color.clear }
+            } else {
+                QuickRecentView(entry: entry)
+            }
+        }
+        .configurationDisplayName("有余 · 最近一笔")
+        .description("看到最近一笔花销,点 + 再记一笔。")
+        .supportedFamilies([.systemSmall])
+    }
+}
+
 @main
 struct MarginWidgetBundle: WidgetBundle {
     var body: some Widget {
         MarginWidget()
         MarginQuickAddWidget()
+        MarginQuickAddPlusWidget()
+        MarginQuickCategoryWidget()
+        MarginQuickVoiceWidget()
+        MarginQuickScanWidget()
+        MarginQuickRecentWidget()
     }
 }

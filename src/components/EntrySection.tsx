@@ -13,6 +13,9 @@ interface Props {
   mode: EntryMode
   onModeChange: (mode: EntryMode) => void
   onAdd: (draft: ExpenseDraft) => void
+  /** Category to preselect (e.g. from a widget deep link) — pass a changing prefillKey to re-apply it. */
+  prefillCategory?: string
+  prefillKey?: number
 }
 
 const MODES: { key: EntryMode; tk: string }[] = [
@@ -21,7 +24,7 @@ const MODES: { key: EntryMode; tk: string }[] = [
   { key: 'speak', tk: 'mode_speak' },
 ]
 
-export function EntrySection({ currency, categories, mode, onModeChange, onAdd }: Props) {
+export function EntrySection({ currency, categories, mode, onModeChange, onAdd, prefillCategory, prefillKey }: Props) {
   const t = useT()
 
   return (
@@ -39,7 +42,15 @@ export function EntrySection({ currency, categories, mode, onModeChange, onAdd }
         ))}
       </div>
 
-      {mode === 'type' && <ExpenseForm currency={currency} categories={categories} onSubmit={onAdd} />}
+      {mode === 'type' && (
+        <ExpenseForm
+          key={prefillKey}
+          currency={currency}
+          categories={categories}
+          initial={prefillCategory ? { category: prefillCategory } : undefined}
+          onSubmit={onAdd}
+        />
+      )}
       {mode === 'scan' && <ScanPanel currency={currency} categories={categories} onAdd={onAdd} />}
       {mode === 'speak' && <VoicePanel currency={currency} categories={categories} onAdd={onAdd} />}
     </section>

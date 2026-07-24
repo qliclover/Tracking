@@ -7,6 +7,7 @@ import { LangProvider, translate } from './lib/i18n'
 import { pendingCharges, reservedForPeriod } from './lib/recurring'
 import { summarize } from './lib/budget'
 import { nextColor } from './lib/categoryColors'
+import { resolveAiCategory } from './lib/categories'
 import { Theme, getTheme, applyTheme } from './lib/theme'
 import { useSync } from './lib/useSync'
 import { syncWidget } from './lib/widget'
@@ -39,6 +40,7 @@ export default function App() {
   const [view, setView] = useState<View>('home')
   const [tab, setTab] = useState<'ledger' | 'stats' | 'history'>('ledger')
   const [entryMode, setEntryMode] = useState<EntryMode>('type')
+  const [prefill, setPrefill] = useState<{ category: string; nonce: number } | null>(null)
 
   useEffect(() => {
     saveState(state)
@@ -48,7 +50,7 @@ export default function App() {
     applyTheme(theme)
   }, [theme])
 
-  // Deep links from the "记一笔" quick-add widget: margin://add?mode=type|scan|speak
+  // Deep links from the quick-add widgets: margin://add?mode=type|scan|speak&category=Food
   useEffect(() => {
     let cleanup: (() => void) | undefined
     import('@capacitor/app').then(({ App: CapApp }) => {
@@ -60,6 +62,12 @@ export default function App() {
             setView('home')
             setTab('ledger')
             setEntryMode(mode)
+            const category = parsed.searchParams.get('category')
+            setPrefill(
+              category
+                ? { category: resolveAiCategory(category, state.categories), nonce: Date.now() }
+                : null,
+            )
           }
         } catch {
           /* ignore malformed URLs */
@@ -70,7 +78,7 @@ export default function App() {
       }
     })
     return () => cleanup?.()
-  }, [])
+  }, [state.categories])
 
   const sync = useSync({ state, onRemote: (remote) => setState(remote) })
 
@@ -362,6 +370,8 @@ export default function App() {
           mode={entryMode}
           onModeChange={setEntryMode}
           onAdd={addExpense}
+          prefillCategory={prefill?.category}
+          prefillKey={prefill?.nonce}
         />
         <div className="rule" />
 
