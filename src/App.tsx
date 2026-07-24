@@ -13,7 +13,6 @@ import { EntrySection } from './components/EntrySection'
 import { ExpenseList } from './components/ExpenseList'
 import { Insights } from './components/Insights'
 import { SettingsPage } from './components/SettingsPage'
-import { Logo } from './components/Logo'
 
 type View = 'home' | 'settings'
 
@@ -183,12 +182,9 @@ export default function App() {
     <LangProvider lang={lang}>
     <div className="app">
       <header className="topbar">
-        <div className="brand">
-          <Logo size={34} />
-          <div className="brand-text">
-            <div className="wordmark cjk">有余</div>
-            <span className="month">{periodLabel(period, state.settings.resetDay, lang)}</span>
-          </div>
+        <div className="brand-text">
+          <div className="wordmark cjk">有余</div>
+          <span className="month">{periodLabel(period, state.settings.resetDay, lang)}</span>
         </div>
         <button
           className="avatar avatar-btn"

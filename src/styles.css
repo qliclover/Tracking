@@ -11,11 +11,14 @@
   --sheet-bg: #f4f2ee;
   --key-bg: #ece9e2;
 
-  --serif: 'Instrument Serif', 'Noto Serif SC', Georgia, 'Times New Roman', serif;
-  --serif-cjk: 'Noto Serif SC', 'Instrument Serif', Georgia, serif;
+  /* Latin numbers/headings use Instrument Serif; Chinese uses 霞鹜文楷 (WenKai). */
+  --serif: 'Instrument Serif', 'LXGW WenKai Screen', 'Noto Serif SC', Georgia, serif;
+  --serif-cjk: 'LXGW WenKai Screen', 'Noto Serif SC', serif;
   --mono: 'Geist Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
-  --sans: -apple-system, BlinkMacSystemFont, 'PingFang SC', 'Hiragino Sans GB',
-    'Microsoft YaHei', 'Noto Sans SC', system-ui, 'Segoe UI', Roboto, sans-serif;
+  /* Body: system sans for Latin, 霞鹜文楷 for Chinese, then system CJK fallbacks. */
+  --sans: -apple-system, BlinkMacSystemFont, 'LXGW WenKai Screen', 'PingFang SC',
+    'Hiragino Sans GB', 'Microsoft YaHei', 'Noto Sans SC', system-ui, 'Segoe UI',
+    Roboto, sans-serif;
 }
 
 :root[data-theme='dark'] {
