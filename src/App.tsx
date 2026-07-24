@@ -16,8 +16,9 @@ import { ExpenseList } from './components/ExpenseList'
 import { Insights } from './components/Insights'
 import { SettingsPage } from './components/SettingsPage'
 import { CategoriesPage } from './components/CategoriesPage'
+import { HistoryPage } from './components/HistoryPage'
 
-type View = 'home' | 'settings' | 'categories'
+type View = 'home' | 'settings' | 'categories' | 'history'
 
 export default function App() {
   const [state, setState] = useState<AppState>(() => loadState())
@@ -229,6 +230,22 @@ export default function App() {
     )
   }
 
+  if (view === 'history') {
+    return (
+      <LangProvider lang={lang}>
+      <div className="app">
+        <HistoryPage
+          expenses={state.expenses}
+          categories={state.categories}
+          currency={state.settings.currency}
+          onDelete={deleteExpense}
+          onBack={() => setView('settings')}
+        />
+      </div>
+      </LangProvider>
+    )
+  }
+
   if (view === 'settings') {
     return (
       <LangProvider lang={lang}>
@@ -243,6 +260,7 @@ export default function App() {
           onSettings={saveSettings}
           onProfile={saveProfile}
           onOpenCategories={() => setView('categories')}
+          onOpenHistory={() => setView('history')}
           onAddRecurring={addRecurring}
           onUpdateRecurring={updateRecurring}
           onDeleteRecurring={deleteRecurring}

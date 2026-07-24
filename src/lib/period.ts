@@ -112,3 +112,15 @@ export function occurrenceInPeriod(dayOfMonth: number, p: Period): Date | null {
 export function isoOf(d: Date): string {
   return iso(d)
 }
+
+/** Group key for an expense's calendar month, e.g. "2025-03". */
+export function monthKey(isoDate: string): string {
+  return isoDate.slice(0, 7)
+}
+
+/** Localized label for a "YYYY-MM" month key, e.g. "2025年 三月" / "March 2025". */
+export function monthKeyLabel(key: string, lang: 'zh' | 'en'): string {
+  const [y, m] = key.split('-').map(Number)
+  if (!y || !m) return key
+  return lang === 'zh' ? `${y}年 ${ZH_MONTH[m - 1]}` : `${MONTH[m - 1]} ${y}`
+}

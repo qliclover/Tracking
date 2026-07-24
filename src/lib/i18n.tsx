@@ -163,6 +163,10 @@ const DICT: Record<string, Entry> = {
     en: "Renaming updates past entries too; deleting doesn't touch history — it just won't show up as a choice anymore.",
   },
 
+  // History
+  history: { zh: '历史记录', en: 'History' },
+  history_empty: { zh: '还没有任何记录。', en: 'Nothing recorded yet.' },
+
   // Pagination
   page_prev: { zh: '上一页', en: 'Prev' },
   page_next: { zh: '下一页', en: 'Next' },
