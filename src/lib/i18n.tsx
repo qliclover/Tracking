@@ -118,6 +118,15 @@ const DICT: Record<string, Entry> = {
   err_bill_name: { zh: '给账单起个名字。', en: 'Give the bill a name.' },
   err_day: { zh: '日期需为 1–31。', en: 'Day must be 1–31.' },
 
+  // Stats
+  tab_ledger: { zh: '账目', en: 'Ledger' },
+  tab_stats: { zh: '统计', en: 'Stats' },
+  stat_total: { zh: '共花 {v}', en: '{v} spent' },
+  stat_perday: { zh: '日均 {v}', en: '{v}/day' },
+  stat_by_category: { zh: '按分类', en: 'By category' },
+  stat_daily: { zh: '每日花销', en: 'Daily spend' },
+  stat_empty: { zh: '这个周期还没有支出。', en: 'No spending this cycle yet.' },
+
   // Footer / brand
   tagline: { zh: '给自己留点余地', en: 'Room to spend' },
 }

@@ -11,6 +11,7 @@ import { useSync } from './lib/useSync'
 import { BudgetCard } from './components/BudgetCard'
 import { EntrySection } from './components/EntrySection'
 import { ExpenseList } from './components/ExpenseList'
+import { Insights } from './components/Insights'
 import { SettingsPage } from './components/SettingsPage'
 import { Logo } from './components/Logo'
 
@@ -20,6 +21,7 @@ export default function App() {
   const [state, setState] = useState<AppState>(() => loadState())
   const [theme, setTheme] = useState<Theme>(() => getTheme())
   const [view, setView] = useState<View>('home')
+  const [tab, setTab] = useState<'ledger' | 'stats'>('ledger')
 
   useEffect(() => {
     saveState(state)
@@ -174,6 +176,8 @@ export default function App() {
   }
 
   const initial = (state.profile.name?.trim()?.[0] || (lang === 'zh' ? '余' : 'M')).toUpperCase()
+  const totalDays = Math.round((period.end.getTime() - period.start.getTime()) / 86400000)
+  const daysElapsed = Math.max(1, totalDays - daysLeftInPeriod(period) + 1)
 
   return (
     <LangProvider lang={lang}>
@@ -200,11 +204,36 @@ export default function App() {
         <div className="rule" />
         <EntrySection currency={state.settings.currency} onAdd={addExpense} />
         <div className="rule" />
-        <ExpenseList
-          expenses={periodExpenses}
-          currency={state.settings.currency}
-          onDelete={deleteExpense}
-        />
+
+        <div className="tabs">
+          <button
+            className={`tab ${tab === 'ledger' ? 'active' : ''}`}
+            onClick={() => setTab('ledger')}
+          >
+            {t('tab_ledger')}
+          </button>
+          <button
+            className={`tab ${tab === 'stats' ? 'active' : ''}`}
+            onClick={() => setTab('stats')}
+          >
+            {t('tab_stats')}
+          </button>
+        </div>
+
+        {tab === 'ledger' ? (
+          <ExpenseList
+            expenses={periodExpenses}
+            currency={state.settings.currency}
+            onDelete={deleteExpense}
+          />
+        ) : (
+          <Insights
+            expenses={periodExpenses}
+            period={period}
+            currency={state.settings.currency}
+            daysElapsed={daysElapsed}
+          />
+        )}
       </main>
 
       <footer className="footer">{t('tagline')}</footer>

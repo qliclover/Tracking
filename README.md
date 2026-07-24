@@ -31,6 +31,8 @@ one running total, and one clear answer to "can I afford this right now?"
   payday (e.g. the 15th) and each cycle runs 15th → 14th.
 - **中文 / English** — the whole UI is bilingual and defaults to Chinese;
   switch anytime in Settings.
+- **Stats** — a one-screen 统计 tab: total + daily average, a spend-by-category
+  breakdown, and a daily-spend chart for the cycle.
 - **Scan a receipt** — snap a photo and an AI vision model (Claude) reads the
   merchant, line items, tax, tip, and total, then drops it into an editable
   draft you confirm in one tap.
@@ -144,7 +146,6 @@ src/
 
 ## Roadmap ideas
 
-- A minimal stats view (spend-by-category, a daily sparkline).
 - Real push notifications for the "you're close to your limit" reminder.
 - Per-category caps.
 - Native domestic speech-to-text for the Speak tab.
