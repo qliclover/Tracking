@@ -39,12 +39,14 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
 
   try {
-    const { image } = (req.body ?? {}) as { image?: string }
-    if (!image) {
+    const body = (req.body ?? {}) as { image?: string; images?: string[] }
+    const images = body.images?.length ? body.images : body.image ? [body.image] : []
+    if (!images.length) {
       res.status(400).json({ error: 'No image provided.' })
       return
     }
 
+    const multi = images.length > 1
     const { object } = await generateObject({
       model: visionModel(),
       schema: receiptSchema,
@@ -56,12 +58,17 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
             {
               type: 'text',
               text:
-                `This is a photo of a receipt. Extract its details into the schema. ` +
+                (multi
+                  ? `These ${images.length} photos are pieces of the same single receipt (e.g. a long ` +
+                    `receipt that didn't fit in one shot) — read them together as one receipt, not ` +
+                    `separate purchases. `
+                  : `This is a photo of a receipt. `) +
+                `Extract its details into the schema. ` +
                 `Money fields are numbers only (no currency symbols). Use null for anything ` +
                 `not present. If the date is missing, use ${todayISO()}. ` +
                 `Pick the single best category from: ${CATEGORIES.join(', ')}.`,
             },
-            { type: 'image', image },
+            ...images.map((image) => ({ type: 'image' as const, image })),
           ],
         },
       ],

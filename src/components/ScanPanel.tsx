@@ -7,6 +7,8 @@ import { compressImage } from '../lib/image'
 import { ExpenseForm } from './ExpenseForm'
 import { DraftHeader } from './DraftHeader'
 
+const MAX_IMAGES = 6
+
 interface Props {
   currency: string
   categories: Category[]
@@ -15,34 +17,45 @@ interface Props {
 
 export function ScanPanel({ currency, categories, onAdd }: Props) {
   const t = useT()
-  const [image, setImage] = useState('')
+  const [images, setImages] = useState<string[]>([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [draft, setDraft] = useState<ExpenseDraft | null>(null)
   const fileRef = useRef<HTMLInputElement>(null)
 
-  function pickFile(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0]
-    if (!file) return
-    const reader = new FileReader()
-    reader.onload = async () => {
-      try {
-        setImage(await compressImage(String(reader.result)))
-      } catch {
-        setImage(String(reader.result))
-      }
+  function pickFiles(e: React.ChangeEvent<HTMLInputElement>) {
+    const files = Array.from(e.target.files ?? []).slice(0, MAX_IMAGES)
+    if (!files.length) return
+    Promise.all(
+      files.map(
+        (file) =>
+          new Promise<string>((resolve, reject) => {
+            const reader = new FileReader()
+            reader.onload = () => resolve(String(reader.result))
+            reader.onerror = () => reject(reader.error)
+            reader.readAsDataURL(file)
+          }),
+      ),
+    ).then(async (raw) => {
+      const compressed = await Promise.all(
+        raw.map((dataUrl) => compressImage(dataUrl).catch(() => dataUrl)),
+      )
+      setImages(compressed)
       setDraft(null)
       setError('')
-    }
-    reader.readAsDataURL(file)
+    })
+  }
+
+  function removeImage(i: number) {
+    setImages((prev) => prev.filter((_, idx) => idx !== i))
   }
 
   async function scan() {
-    if (!image) return
+    if (!images.length) return
     setLoading(true)
     setError('')
     try {
-      setDraft(await scanReceipt(image, categories))
+      setDraft(await scanReceipt(images, categories))
     } catch (err) {
       setError(err instanceof Error ? err.message : t('scan_failed'))
     } finally {
@@ -60,12 +73,12 @@ export function ScanPanel({ currency, categories, onAdd }: Props) {
         header={<DraftHeader draft={draft} currency={currency} />}
         onCancel={() => {
           setDraft(null)
-          setImage('')
+          setImages([])
         }}
         onSubmit={(d) => {
           onAdd(d)
           setDraft(null)
-          setImage('')
+          setImages([])
         }}
       />
     )
@@ -77,15 +90,29 @@ export function ScanPanel({ currency, categories, onAdd }: Props) {
         ref={fileRef}
         type="file"
         accept="image/*"
-        capture="environment"
-        onChange={pickFile}
+        multiple
+        onChange={pickFiles}
         style={{ display: 'none' }}
       />
 
-      {image ? (
-        <div className="scan-preview" onClick={() => fileRef.current?.click()}>
-          <img src={image} alt="" />
-          <span className="scan-retake">{t('tap_retake')}</span>
+      {images.length > 0 ? (
+        <div>
+          <div className="scan-multi">
+            {images.map((src, i) => (
+              <div className="scan-thumb" key={i}>
+                <img src={src} alt="" />
+                <button type="button" className="scan-thumb-remove" aria-label={t('remove')} onClick={() => removeImage(i)}>
+                  ×
+                </button>
+              </div>
+            ))}
+            {images.length < MAX_IMAGES && (
+              <button type="button" className="scan-thumb-add" onClick={() => fileRef.current?.click()}>
+                +
+              </button>
+            )}
+          </div>
+          {images.length > 1 && <p className="muted" style={{ marginTop: 8 }}>{t('scan_multi_hint', { v: images.length })}</p>}
         </div>
       ) : (
         <button type="button" className="dropzone" onClick={() => fileRef.current?.click()}>
@@ -96,7 +123,7 @@ export function ScanPanel({ currency, categories, onAdd }: Props) {
 
       {error && <p className="error" style={{ marginTop: 12 }}>{error}</p>}
 
-      {image && (
+      {images.length > 0 && (
         <button
           type="button"
           className="btn btn-primary"

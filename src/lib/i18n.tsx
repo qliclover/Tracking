@@ -45,11 +45,12 @@ const DICT: Record<string, Entry> = {
 
   // Scan
   snap_receipt: { zh: '拍张小票', en: 'Snap a receipt' },
-  snap_hint: { zh: '拍照或选一张图片', en: 'Take a photo or choose an image' },
+  snap_hint: { zh: '拍照或选图片,小票太长可以选多张', en: 'Take a photo or choose images — pick several for a long receipt' },
   tap_retake: { zh: '点击重拍', en: 'Tap to retake' },
   read_receipt: { zh: '识别小票', en: 'Read receipt' },
   reading: { zh: '识别中…', en: 'Reading…' },
   scan_failed: { zh: '识别失败。', en: 'Scan failed.' },
+  scan_multi_hint: { zh: '这 {v} 张会当成同一张小票合并识别。', en: "These {v} photos will be read as one receipt." },
   scan_desc: {
     zh: '对准小票拍照,AI 会自动读出商家、单项、税费与合计,生成一张可编辑的草稿,一键确认即可入账。',
     en: 'Point your camera at a receipt and AI reads the merchant, line items, tax, and total — then drops it into an editable draft you confirm in one tap.',

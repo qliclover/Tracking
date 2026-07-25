@@ -23,10 +23,10 @@ async function postJSON<T>(url: string, body: unknown): Promise<T> {
   return (await res.json()) as T
 }
 
-/** Send a receipt image (data URL) and normalize the result into a draft. */
-export async function scanReceipt(imageDataUrl: string, categories: readonly Category[]): Promise<ExpenseDraft> {
+/** Send one or more photos of the same receipt (data URLs) and normalize the result into a draft. */
+export async function scanReceipt(imageDataUrls: string[], categories: readonly Category[]): Promise<ExpenseDraft> {
   const { receipt } = await postJSON<{ receipt: Receipt }>('/api/receipt', {
-    image: imageDataUrl,
+    images: imageDataUrls,
   })
   return {
     amount: Math.abs(Number(receipt.total) || 0),
