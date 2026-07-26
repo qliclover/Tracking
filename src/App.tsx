@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { AppState, Profile, Recurring, Settings } from './lib/types'
 import { ExpenseDraft } from './lib/receipt'
 import { loadState, saveState, makeExpense, emptyState, newId } from './lib/storage'
-import { currentPeriod, expensesForPeriod, daysLeftInPeriod, periodLabel, periodMonthName } from './lib/period'
+import { currentPeriod, expensesForPeriod, daysLeftInPeriod, periodMonthName } from './lib/period'
 import { LangProvider, translate } from './lib/i18n'
 import { pendingCharges, reservedForPeriod } from './lib/recurring'
 import { summarize } from './lib/budget'
@@ -12,35 +12,31 @@ import { Theme, getTheme, applyTheme } from './lib/theme'
 import { useSync } from './lib/useSync'
 import { syncWidget } from './lib/widget'
 import { BudgetCard } from './components/BudgetCard'
-import { EntrySection, EntryMode } from './components/EntrySection'
+import { EntryMode } from './components/EntrySection'
+import { EntrySheet } from './components/EntrySheet'
 import { ExpenseList } from './components/ExpenseList'
 import { Insights } from './components/Insights'
+import { BillsPage } from './components/BillsPage'
+import { AddBillSheet } from './components/AddBillSheet'
+import { TabBar, MainTab } from './components/TabBar'
 import { SettingsPage } from './components/SettingsPage'
 import { CategoriesPage } from './components/CategoriesPage'
-import { HistoryList } from './components/HistoryPage'
 import { ProfilePage } from './components/ProfilePage'
-import { FixedBillsPage } from './components/FixedBillsPage'
-import { AppearancePage } from './components/AppearancePage'
 import { SyncSettingsPage } from './components/SyncSettingsPage'
-import { DataPage } from './components/DataPage'
 
-type View =
-  | 'home'
-  | 'settings'
-  | 'profile'
-  | 'categories'
-  | 'fixedbills'
-  | 'appearance'
-  | 'sync'
-  | 'data'
+type SubView = 'none' | 'profile' | 'categories' | 'sync'
+type SheetView = 'none' | 'entry' | 'addBill'
 
 export default function App() {
   const [state, setState] = useState<AppState>(() => loadState())
   const [theme, setTheme] = useState<Theme>(() => getTheme())
-  const [view, setView] = useState<View>('home')
-  const [tab, setTab] = useState<'ledger' | 'stats' | 'history'>('ledger')
+  const [tab, setTab] = useState<MainTab>('ledger')
+  const [subView, setSubView] = useState<SubView>('none')
+  const [sheet, setSheet] = useState<SheetView>('none')
   const [entryMode, setEntryMode] = useState<EntryMode>('type')
   const [prefill, setPrefill] = useState<{ category: string; nonce: number } | null>(null)
+  const [viewAnchor, setViewAnchor] = useState<Date>(() => new Date())
+  const [ledgerExpanded, setLedgerExpanded] = useState(false)
 
   useEffect(() => {
     saveState(state)
@@ -59,8 +55,9 @@ export default function App() {
           const parsed = new URL(url)
           const mode = parsed.searchParams.get('mode')
           if (mode === 'type' || mode === 'scan' || mode === 'speak') {
-            setView('home')
             setTab('ledger')
+            setSubView('none')
+            setSheet('entry')
             setEntryMode(mode)
             const category = parsed.searchParams.get('category')
             setPrefill(
@@ -82,12 +79,21 @@ export default function App() {
 
   const sync = useSync({ state, onRemote: (remote) => setState(remote) })
 
+  // Browsed period (month pager on Home) — separate from the real current period below.
   const period = useMemo(
-    () => currentPeriod(state.settings.resetDay),
-    [state.settings.resetDay],
+    () => currentPeriod(state.settings.resetDay, viewAnchor),
+    [state.settings.resetDay, viewAnchor],
   )
 
-  // Post any due fixed-bill charges into the ledger.
+  function goPrevPeriod() {
+    setViewAnchor(new Date(period.start.getTime() - 1))
+  }
+  function goNextPeriod() {
+    setViewAnchor(new Date(period.end.getTime()))
+  }
+
+  // Post any due fixed-bill charges into the ledger — always the REAL current
+  // period, regardless of what month the user is browsing on Home.
   useEffect(() => {
     setState((prev) => {
       const p = currentPeriod(prev.settings.resetDay)
@@ -112,11 +118,26 @@ export default function App() {
     [periodExpenses, state.settings, period, reserved],
   )
 
+  // Widget sync always reflects the REAL current period, not the browsed one.
+  const realPeriod = useMemo(
+    () => currentPeriod(state.settings.resetDay),
+    [state.settings.resetDay],
+  )
+  const realPeriodExpenses = useMemo(
+    () => expensesForPeriod(state.expenses, realPeriod),
+    [state.expenses, realPeriod],
+  )
+  const realReserved = useMemo(() => reservedForPeriod(state, realPeriod), [state, realPeriod])
+  const realSummary = useMemo(
+    () => summarize(realPeriodExpenses, state.settings, { daysLeft: daysLeftInPeriod(realPeriod), reserved: realReserved }),
+    [realPeriodExpenses, state.settings, realPeriod, realReserved],
+  )
+
   useEffect(() => {
-    const label = periodLabel(period, state.settings.resetDay, state.settings.lang)
-    const monthName = periodMonthName(period, state.settings.lang)
-    syncWidget(summary, state.settings.currency, label, monthName, state.settings.lang, periodExpenses, state.categories)
-  }, [summary, state.settings.currency, state.settings.resetDay, state.settings.lang, period, periodExpenses, state.categories])
+    const label = `${realPeriod.start.getFullYear()}年 ${periodMonthName(realPeriod, state.settings.lang)}`
+    const monthName = periodMonthName(realPeriod, state.settings.lang)
+    syncWidget(realSummary, state.settings.currency, label, monthName, state.settings.lang, realPeriodExpenses, state.categories)
+  }, [realSummary, state.settings.currency, state.settings.lang, realPeriod, realPeriodExpenses, state.categories])
 
   function update(mut: (s: AppState) => AppState) {
     setState((prev) => ({ ...mut(prev), updatedAt: Date.now() }))
@@ -235,17 +256,22 @@ export default function App() {
     }
   }
 
-  if (view === 'profile') {
+  function closeEntrySheet() {
+    setSheet('none')
+    setPrefill(null)
+  }
+
+  // ---- Pushed sub-views (Profile / Categories / Sync settings) ----
+  if (subView === 'profile') {
     return (
       <LangProvider lang={lang}>
       <div className="app">
-        <ProfilePage profile={state.profile} onProfile={saveProfile} onBack={() => setView('settings')} />
+        <ProfilePage profile={state.profile} onProfile={saveProfile} onBack={() => setSubView('none')} />
       </div>
       </LangProvider>
     )
   }
-
-  if (view === 'categories') {
+  if (subView === 'categories') {
     return (
       <LangProvider lang={lang}>
       <div className="app">
@@ -254,174 +280,156 @@ export default function App() {
           onAdd={addCategory}
           onRename={renameCategory}
           onDelete={deleteCategory}
-          onBack={() => setView('settings')}
+          onBack={() => setSubView('none')}
         />
       </div>
       </LangProvider>
     )
   }
-
-  if (view === 'fixedbills') {
+  if (subView === 'sync') {
     return (
       <LangProvider lang={lang}>
       <div className="app">
-        <FixedBillsPage
-          currency={state.settings.currency}
-          categories={state.categories}
-          recurring={state.recurring}
-          onAdd={addRecurring}
-          onUpdate={updateRecurring}
-          onDelete={deleteRecurring}
-          onBack={() => setView('settings')}
-        />
+        <SyncSettingsPage sync={sync} onBack={() => setSubView('none')} />
       </div>
       </LangProvider>
     )
   }
 
-  if (view === 'appearance') {
-    return (
-      <LangProvider lang={lang}>
-      <div className="app">
-        <AppearancePage
-          settings={state.settings}
-          theme={theme}
-          onSettings={saveSettings}
-          onTheme={setTheme}
-          onBack={() => setView('settings')}
-        />
-      </div>
-      </LangProvider>
-    )
-  }
-
-  if (view === 'sync') {
-    return (
-      <LangProvider lang={lang}>
-      <div className="app">
-        <SyncSettingsPage sync={sync} onBack={() => setView('settings')} />
-      </div>
-      </LangProvider>
-    )
-  }
-
-  if (view === 'data') {
-    return (
-      <LangProvider lang={lang}>
-      <div className="app">
-        <DataPage onExport={exportBackup} onImport={importBackup} onClear={clearAll} onBack={() => setView('settings')} />
-      </div>
-      </LangProvider>
-    )
-  }
-
-  if (view === 'settings') {
-    return (
-      <LangProvider lang={lang}>
-      <div className="app">
-        <SettingsPage
-          settings={state.settings}
-          profile={state.profile}
-          categories={state.categories}
-          recurring={state.recurring}
-          theme={theme}
-          sync={sync}
-          onSettings={saveSettings}
-          onOpenProfile={() => setView('profile')}
-          onOpenCategories={() => setView('categories')}
-          onOpenFixedBills={() => setView('fixedbills')}
-          onOpenAppearance={() => setView('appearance')}
-          onOpenSync={() => setView('sync')}
-          onOpenData={() => setView('data')}
-          onBack={() => setView('home')}
-        />
-      </div>
-      </LangProvider>
-    )
-  }
-
-  const initial = (state.profile.name?.trim()?.[0] || (lang === 'zh' ? '余' : 'M')).toUpperCase()
+  const year = period.start.getFullYear()
+  const monthName = periodMonthName(period, lang)
   const totalDays = Math.round((period.end.getTime() - period.start.getTime()) / 86400000)
   const daysElapsed = Math.max(1, totalDays - daysLeftInPeriod(period) + 1)
 
   return (
     <LangProvider lang={lang}>
-    <div className="app">
-      <header className="topbar">
-        <div className="brand-text">
-          <div className={`wordmark ${lang === 'zh' ? 'cjk' : 'serif'}`}>{lang === 'zh' ? '有余' : 'Margin'}</div>
-          <span className="month">{periodLabel(period, state.settings.resetDay, lang)}</span>
-        </div>
-        <button
-          className="avatar avatar-btn"
-          onClick={() => setView('settings')}
-          aria-label={t('settings')}
-        >
-          {state.profile.avatar ? <img src={state.profile.avatar} alt="" /> : <span>{initial}</span>}
-        </button>
-      </header>
-
+    <div className={`app app-v2${tab === 'settings' ? ' app-settings' : ''}`}>
       <main className="content">
-        <BudgetCard summary={summary} currency={state.settings.currency} />
-        <div className="rule" />
-        <EntrySection
-          currency={state.settings.currency}
-          categories={state.categories}
-          mode={entryMode}
-          onModeChange={setEntryMode}
-          onAdd={addExpense}
-          prefillCategory={prefill?.category}
-          prefillKey={prefill?.nonce}
-        />
-        <div className="rule" />
+        {tab === 'ledger' && !ledgerExpanded && (
+          <>
+            <BudgetCard
+              summary={summary}
+              currency={state.settings.currency}
+              year={year}
+              monthName={monthName}
+              onPrev={goPrevPeriod}
+              onNext={goNextPeriod}
+            />
+            <div className="rule" />
+            <ExpenseList
+              expenses={periodExpenses}
+              categories={state.categories}
+              currency={state.settings.currency}
+              onDelete={deleteExpense}
+              limit={2}
+              onSeeAll={() => setLedgerExpanded(true)}
+            />
+          </>
+        )}
 
-        <div className="tabs">
-          <button
-            className={`tab ${tab === 'ledger' ? 'active' : ''}`}
-            onClick={() => setTab('ledger')}
-          >
-            {t('tab_ledger')}
-          </button>
-          <button
-            className={`tab ${tab === 'stats' ? 'active' : ''}`}
-            onClick={() => setTab('stats')}
-          >
-            {t('tab_stats')}
-          </button>
-          <button
-            className={`tab ${tab === 'history' ? 'active' : ''}`}
-            onClick={() => setTab('history')}
-          >
-            {t('history')}
-          </button>
-        </div>
+        {tab === 'ledger' && ledgerExpanded && (
+          <>
+            <div className="page-head">
+              <div>
+                <div className="wordmark serif cjk page-title">{t('tab_ledger')}</div>
+                <div className="page-sub">{monthName} · {periodExpenses.length}</div>
+              </div>
+              <button type="button" className="theme-toggle" onClick={() => setLedgerExpanded(false)}>
+                {t('done')}
+              </button>
+            </div>
+            <ExpenseList
+              expenses={periodExpenses}
+              categories={state.categories}
+              currency={state.settings.currency}
+              onDelete={deleteExpense}
+              showFullDate
+            />
+          </>
+        )}
 
-        {tab === 'ledger' ? (
-          <ExpenseList
-            expenses={periodExpenses}
-            categories={state.categories}
+        {tab === 'stats' && (
+          <>
+            <div className="page-head">
+              <div>
+                <div className="wordmark serif cjk page-title">{t('tab_stats')}</div>
+                <div className="page-sub">{lang === 'zh' ? `${year}年 ${monthName}` : `${monthName} ${year}`}</div>
+              </div>
+            </div>
+            <Insights
+              expenses={periodExpenses}
+              categories={state.categories}
+              period={period}
+              currency={state.settings.currency}
+              daysElapsed={daysElapsed}
+              summary={summary}
+            />
+          </>
+        )}
+
+        {tab === 'bills' && (
+          <BillsPage
             currency={state.settings.currency}
-            onDelete={deleteExpense}
+            categories={state.categories}
+            recurring={state.recurring}
+            postedRecurring={state.postedRecurring}
+            period={realPeriod}
+            reserved={realReserved}
+            onUpdate={updateRecurring}
+            onDelete={deleteRecurring}
+            onAddOpen={() => setSheet('addBill')}
           />
-        ) : tab === 'stats' ? (
-          <Insights
-            expenses={periodExpenses}
+        )}
+
+        {tab === 'settings' && (
+          <SettingsPage
+            settings={state.settings}
+            profile={state.profile}
             categories={state.categories}
-            period={period}
-            currency={state.settings.currency}
-            daysElapsed={daysElapsed}
-          />
-        ) : (
-          <HistoryList
-            expenses={state.expenses}
-            categories={state.categories}
-            currency={state.settings.currency}
-            onDelete={deleteExpense}
+            theme={theme}
+            sync={sync}
+            onSettings={saveSettings}
+            onTheme={setTheme}
+            onExport={exportBackup}
+            onImport={importBackup}
+            onClear={clearAll}
+            onOpenProfile={() => setSubView('profile')}
+            onOpenCategories={() => setSubView('categories')}
+            onOpenSync={() => setSubView('sync')}
           />
         )}
       </main>
 
-      <footer className="footer">{t('tagline')}</footer>
+      <TabBar
+        tab={tab}
+        onTab={(next) => {
+          setTab(next)
+          setLedgerExpanded(false)
+        }}
+        onAdd={() => setSheet('entry')}
+      />
+
+      <EntrySheet
+        open={sheet === 'entry'}
+        onClose={closeEntrySheet}
+        currency={state.settings.currency}
+        categories={state.categories}
+        mode={entryMode}
+        onModeChange={setEntryMode}
+        onAdd={(draft) => {
+          addExpense(draft)
+          closeEntrySheet()
+        }}
+        prefillCategory={prefill?.category}
+        prefillKey={prefill?.nonce}
+      />
+
+      <AddBillSheet
+        open={sheet === 'addBill'}
+        categories={state.categories}
+        onAdd={addRecurring}
+        onClose={() => setSheet('none')}
+      />
     </div>
     </LangProvider>
   )

@@ -954,3 +954,493 @@ button {
   font-size: 11px;
   color: var(--muted);
 }
+
+/* ==== Layout v2 ==== */
+
+.app-v2 {
+  padding-bottom: 0;
+}
+.app-v2 .content {
+  padding-bottom: 96px;
+}
+
+/* ---- Bottom tab bar ---- */
+.tabbar {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  max-width: 460px;
+  margin: 0 auto;
+  background: var(--bg);
+  border-top: 1px solid var(--border);
+  padding: 10px 22px calc(env(safe-area-inset-bottom) + 14px);
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  z-index: 15;
+}
+.tabbar-item {
+  width: 60px;
+  background: none;
+  border: none;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+  cursor: pointer;
+  padding: 0;
+}
+.tabbar-dash {
+  width: 16px;
+  height: 2px;
+  border-radius: 2px;
+  background: var(--border-2);
+}
+.tabbar-dash.active {
+  background: var(--fg);
+}
+.tabbar-label {
+  font-size: 11px;
+  color: var(--muted);
+}
+.tabbar-label.active {
+  color: var(--fg);
+}
+.tabbar-fab {
+  width: 52px;
+  height: 52px;
+  border-radius: 999px;
+  background: var(--fg);
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  margin-bottom: 2px;
+  cursor: pointer;
+  box-shadow: 0 6px 14px -6px rgba(30, 25, 15, 0.5);
+  flex: none;
+}
+.tabbar-fab-plus {
+  position: relative;
+  width: 18px;
+  height: 18px;
+  display: block;
+}
+.tabbar-fab-plus::before,
+.tabbar-fab-plus::after {
+  content: '';
+  position: absolute;
+  background: var(--bg);
+  border-radius: 2px;
+}
+.tabbar-fab-plus::before {
+  left: 0;
+  top: 8px;
+  width: 18px;
+  height: 2px;
+}
+.tabbar-fab-plus::after {
+  left: 8px;
+  top: 0;
+  width: 2px;
+  height: 18px;
+}
+
+/* ---- Month pager ---- */
+.pager-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.pager-arrow {
+  width: 34px;
+  height: 34px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: none;
+  color: var(--muted);
+  font-size: 15px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  flex: none;
+}
+.pager-center {
+  text-align: center;
+}
+.pager-year {
+  display: block;
+  font-size: 11px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.pager-month {
+  display: block;
+  font-size: 17px;
+  font-weight: 600;
+  margin-top: 2px;
+}
+
+/* ---- Centered hero ---- */
+.hero-block {
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+  margin: 20px 0 0;
+  padding: 26px 0 24px;
+  text-align: center;
+}
+.hero-block .hero-label {
+  margin: 0 0 12px;
+}
+.hero-block .hero-number {
+  justify-content: center;
+}
+.hero-block .meter {
+  margin: 20px 18px 0;
+}
+.meter-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.meter-row .track {
+  flex: 1;
+}
+.meter-pct {
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--muted);
+  flex: none;
+}
+.level-warn .meter-pct,
+.level-over .meter-pct {
+  color: var(--danger);
+}
+.hero-block .reminder {
+  text-align: center;
+}
+
+/* ---- Stat mini-cards ---- */
+.stat-cards {
+  display: flex;
+  gap: 8px;
+  padding: 16px 0 0;
+}
+.stat-card {
+  flex: 1;
+  background: var(--sheet-bg);
+  border-radius: 8px;
+  padding: 11px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+.stat-card-amt {
+  font-family: var(--serif);
+  font-size: 22px;
+  line-height: 1.1;
+}
+.stat-card-amt.reserved {
+  color: var(--danger);
+}
+
+/* ---- Day-grouped ledger ---- */
+.day-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  padding: 18px 0 8px;
+}
+.day-head-label {
+  font-size: 11px;
+  letter-spacing: 1.8px;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.day-head-total {
+  font-size: 16px;
+}
+.see-all {
+  width: 100%;
+  background: none;
+  border: none;
+  cursor: pointer;
+  justify-content: space-between;
+}
+
+/* ---- Empty state ---- */
+.empty {
+  padding: 60px 20px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.empty-plus {
+  width: 56px;
+  height: 56px;
+  border-radius: 999px;
+  border: 1.5px dashed var(--border-2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--faint);
+  font-size: 22px;
+  margin-bottom: 20px;
+}
+.empty-title {
+  font-size: 22px;
+  display: block;
+  margin-bottom: 8px;
+}
+.empty p {
+  color: var(--muted);
+  font-size: 13.5px;
+  margin: 0;
+  line-height: 1.6;
+}
+
+/* ---- Stats ring card ---- */
+.ring-card {
+  margin: 18px 0 0;
+  background: var(--sheet-bg);
+  border-radius: 10px;
+  padding: 18px;
+  display: flex;
+  align-items: center;
+  gap: 18px;
+}
+.ring {
+  width: 82px;
+  height: 82px;
+  border-radius: 999px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+}
+.ring-inner {
+  width: 62px;
+  height: 62px;
+  border-radius: 999px;
+  background: var(--sheet-bg);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+.ring-pct {
+  font-size: 22px;
+  line-height: 1;
+}
+.ring-label {
+  font-size: 9px;
+  letter-spacing: 1px;
+  color: var(--muted);
+  margin-top: 2px;
+}
+.ring-side {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.ring-total {
+  font-size: 30px;
+  line-height: 1;
+}
+.ring-meta {
+  font-size: 12px;
+}
+
+/* ---- Shared page header (Ledger expanded / Stats / Bills) ---- */
+.page-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-bottom: 16px;
+  margin-bottom: 4px;
+  border-bottom: 1px solid var(--border);
+}
+.page-title {
+  font-size: 19px;
+}
+.page-sub {
+  font-size: 11px;
+  letter-spacing: 1.4px;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-top: 4px;
+}
+
+/* ---- Bills tab ---- */
+.round-btn {
+  width: 34px;
+  height: 34px;
+  border-radius: 999px;
+  border: none;
+  font-size: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  flex: none;
+}
+.round-btn-dark {
+  background: #1a1a1a;
+  color: #faf9f7;
+}
+/* Always a dark accent card, independent of light/dark theme (like the widget). */
+.reserved-hero {
+  margin: 18px 0 0;
+  background: #1a1a1a;
+  border-radius: 10px;
+  padding: 18px;
+}
+.reserved-hero-lbl {
+  display: block;
+  color: #8f8b82;
+  margin-bottom: 8px;
+}
+.reserved-hero-amt {
+  font-size: 40px;
+  line-height: 1;
+  color: #faf9f7;
+}
+.reserved-hero-hint {
+  font-size: 12px;
+  color: #8f8b82;
+  margin: 10px 0 0;
+}
+.bill-status {
+  font-size: 11px;
+  color: var(--muted);
+  margin-top: 1px;
+}
+
+/* ---- Settings v2 ---- */
+.settings-v2 {
+  position: relative;
+}
+.settings-v2 .topbar {
+  margin-bottom: 20px;
+}
+.app-settings {
+  background: #f2f0eb;
+}
+:root[data-theme='dark'] .app-settings {
+  background: var(--bg);
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) .app-settings {
+    background: var(--bg);
+  }
+}
+.settings-cards {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+/* Light mode: page bg is the custom #f2f0eb below, so cards use the lighter
+   normal --bg to stand out. Dark mode: page bg IS --bg, so cards need to use
+   the lighter --sheet-bg instead — see overrides below. */
+.card {
+  background: var(--bg);
+  border-radius: 12px;
+  padding: 16px;
+}
+:root[data-theme='dark'] .card {
+  background: var(--sheet-bg);
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) .card {
+    background: var(--sheet-bg);
+  }
+}
+.card-tight {
+  padding: 4px 16px;
+}
+.card-row {
+  display: flex;
+  align-items: center;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--track);
+  gap: 8px;
+}
+.card-row-last {
+  border-bottom: none;
+}
+.card-row-action {
+  width: 100%;
+  background: none;
+  border: none;
+  cursor: pointer;
+  justify-content: space-between;
+  font-family: var(--sans);
+}
+.card-row-label {
+  flex: 1;
+  font-size: 15px;
+  text-align: left;
+}
+.card-row-input {
+  border: none;
+  background: none;
+  color: var(--fg);
+  font-size: 16px;
+  text-align: right;
+  width: 90px;
+  font-family: var(--sans);
+}
+.card-row-select {
+  border: none;
+  background: none;
+  color: var(--muted);
+  font-size: 14px;
+  font-family: var(--sans);
+  text-align: right;
+}
+.settings-tagline {
+  text-align: center;
+  color: var(--faint);
+  font-size: 11px;
+  letter-spacing: 1.4px;
+  margin: 8px 0 0;
+}
+
+/* ---- Bottom sheet (Entry / Add bill) ---- */
+.sheet-handle {
+  width: 38px;
+  height: 4px;
+  background: var(--border-2);
+  border-radius: 999px;
+  margin: 0 auto 18px;
+}
+.sheet-title {
+  font-size: 18px;
+  font-weight: 600;
+  text-align: center;
+  margin: 0 0 24px;
+}
+.hint-box {
+  background: var(--sheet-bg);
+  border-radius: 8px;
+  padding: 13px 14px;
+  margin: 0 0 22px;
+  font-size: 12.5px;
+  color: var(--muted);
+  line-height: 1.6;
+}
+.overlay {
+  z-index: 30;
+}
+.sheet {
+  border-top-left-radius: 20px;
+  border-top-right-radius: 20px;
+  max-height: 88vh;
+  overflow-y: auto;
+}

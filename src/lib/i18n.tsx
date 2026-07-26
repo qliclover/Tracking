@@ -10,14 +10,10 @@ const DICT: Record<string, Entry> = {
   over_budget: { zh: '已超支', en: 'Over budget' },
   budget: { zh: '额度', en: 'Budget' },
   spent: { zh: '已花', en: 'Spent' },
-  pct_used: { zh: '已用 {v}%', en: '{v}% used' },
-  pct_over: { zh: '超 {v}%', en: '{v}% over' },
-  days_left: { zh: '还剩 {v} 天', en: '{v} days left' },
-  bills_reserved: { zh: '待扣固定账单 · 预留 {v}', en: 'Fixed bills due later · {v} reserved' },
   set_budget_first: { zh: '先设置每月额度即可开始。', en: 'Set a monthly budget to begin.' },
-  rem_over: { zh: '这个月超了 {v}。', en: "You're {v} past the line this month." },
-  rem_warn: { zh: '只剩 {v} 了 —— 每天约 {p} 才够撑到月底。', en: 'Only {v} left — about {p} a day to finish the month.' },
-  rem_ok: { zh: '每天约 {p} 就能稳住这个月。', en: 'About {p} a day keeps you on track.' },
+  rem_over: { zh: '这个月超了 {v},还剩 {d} 天。', en: "You're {v} past the line, {d} days left." },
+  rem_warn: { zh: '只剩 {v} 了 —— 每天约 {p} 才够撑到月底,还剩 {d} 天。', en: 'Only {v} left — about {p} a day to finish the month, {d} days left.' },
+  rem_ok: { zh: '每天约 {p} 就能稳住,还剩 {d} 天。', en: 'About {p} a day keeps you on track, {d} days left.' },
 
   // Entry modes
   mode_type: { zh: '手动', en: 'Type' },
@@ -78,8 +74,15 @@ const DICT: Record<string, Entry> = {
   mic_unavailable: { zh: 'Mic unavailable · 已切到打字', en: 'Mic unavailable · switched to typing' },
 
   // Expense list
-  empty_sub: { zh: '在上面记下第一笔。', en: 'Record your first expense above.' },
   today: { zh: '今天', en: 'Today' },
+  yesterday: { zh: '昨天', en: 'Yesterday' },
+  clean_page: { zh: '干净的一页。', en: 'A clean page.' },
+  empty_cta: {
+    zh: '点下面的圆钮记下第一笔。\n手动、拍照、语音都行。',
+    en: 'Tap the button below to record your first one.\nType, scan, or speak — whatever works.',
+  },
+  all_this_month: { zh: '本月全部 {v} 笔', en: 'All {v} this month' },
+  reserved: { zh: '已预留', en: 'Reserved' },
 
   // Settings
   settings: { zh: '设置', en: 'Settings' },
@@ -140,6 +143,7 @@ const DICT: Record<string, Entry> = {
 
   // Recurring bills
   fixed_bills: { zh: '固定账单', en: 'Fixed bills' },
+  tab_bills: { zh: '账单', en: 'Bills' },
   fixed_empty: { zh: '房租、订阅…加进来会在每个周期自动扣。', en: "Rent, subscriptions… added here they're deducted automatically each cycle." },
   day_of: { zh: '每月 {d} 号 · {c}', en: 'Day {d} · {c}' },
   pause: { zh: '暂停', en: 'Pause' },
@@ -153,9 +157,17 @@ const DICT: Record<string, Entry> = {
   },
   charged_day: { zh: '每月扣费日', en: 'Charged on day' },
   add_bill: { zh: '添加', en: 'Add bill' },
+  add_bill_title: { zh: '添加固定账单', en: 'Add a fixed bill' },
   cancel: { zh: '取消', en: 'Cancel' },
   err_bill_name: { zh: '给账单起个名字。', en: 'Give the bill a name.' },
   err_day: { zh: '日期需为 1–31。', en: 'Day must be 1–31.' },
+  bills_count_short: { zh: '{v} 项 · 每月', en: '{v} · monthly' },
+  reserved_this_month: { zh: '本月已从余额预留', en: "Reserved from this month's balance" },
+  auto_charge_hint: { zh: '到期后自动入账,无需手动记。', en: 'Posts automatically when due — no need to log it.' },
+  due_soon: { zh: '待扣', en: 'Upcoming' },
+  paused_bills: { zh: '已暂停', en: 'Paused' },
+  posted_status: { zh: '已入账', en: 'Posted' },
+  days_after: { zh: '{v} 天后', en: 'in {v} days' },
 
   // Categories (user-editable)
   manage_categories: { zh: '分类', en: 'Categories' },
@@ -172,22 +184,15 @@ const DICT: Record<string, Entry> = {
     en: "Renaming updates past entries too; deleting doesn't touch history — it just won't show up as a choice anymore.",
   },
 
-  // History
-  history: { zh: '历史记录', en: 'History' },
-  history_empty: { zh: '还没有任何记录。', en: 'Nothing recorded yet.' },
-
-  // Pagination
-  page_prev: { zh: '上一页', en: 'Prev' },
-  page_next: { zh: '下一页', en: 'Next' },
-  page_of: { zh: '第 {a} / {b} 页', en: 'Page {a} of {b}' },
-
   // Stats
   tab_ledger: { zh: '账目', en: 'Ledger' },
   tab_stats: { zh: '统计', en: 'Stats' },
-  stat_total: { zh: '共花 {v}', en: '{v} spent' },
   stat_perday: { zh: '日均 {v}', en: '{v}/day' },
   stat_by_category: { zh: '按分类', en: 'By category' },
   stat_daily: { zh: '每日花销', en: 'Daily spend' },
+  stat_spent_this_month: { zh: '本月已花', en: 'Spent this month' },
+  stat_usage_pct: { zh: '用量%', en: 'Usage %' },
+  stat_perday_daysleft: { zh: '日均 {p} · 还剩 {d} 天', en: '{p}/day · {d} days left' },
 
   // Footer / brand
   tagline: { zh: '给自己留点余地', en: 'Room to spend' },

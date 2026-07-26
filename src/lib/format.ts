@@ -49,6 +49,24 @@ export function prettyDate(iso: string, lang: 'zh' | 'en' = 'en'): string {
   return `${months[m - 1]} ${day}`
 }
 
+/** Day-group header label: "Today" / "Yesterday" / "M月D日" (or "Jan D" in English). */
+export function dayGroupLabel(iso: string, lang: 'zh' | 'en' = 'en'): string {
+  const [y, m, day] = iso.split('-').map(Number)
+  if (!y || !m || !day) return iso
+  const d = new Date(y, m - 1, day)
+  const today = new Date()
+  today.setHours(0, 0, 0, 0)
+  const diffDays = Math.round((today.getTime() - d.getTime()) / 86400000)
+  if (diffDays === 0) return lang === 'zh' ? '今天' : 'Today'
+  if (diffDays === 1) return lang === 'zh' ? '昨天' : 'Yesterday'
+  if (lang === 'zh') return `${m}月${day}日`
+  const months = [
+    'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+    'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec',
+  ]
+  return `${months[m - 1]} ${day}`
+}
+
 /** Uppercase month label for the header, e.g. "JULY 2026". */
 export function monthLabel(key: string): string {
   const [y, m] = key.split('-').map(Number)
