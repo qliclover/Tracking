@@ -250,6 +250,10 @@ export default function App() {
   const lang = state.settings.lang
   const t = (k: string, p?: Record<string, string | number>) => translate(k, lang, p)
 
+  const realYear = realPeriod.start.getFullYear()
+  const realMonthName = periodMonthName(realPeriod, lang)
+  const realMonthLabel = lang === 'zh' ? `${realYear}年 ${realMonthName}` : `${realMonthName} ${realYear}`
+
   function clearAll() {
     if (confirm(t('confirm_clear'))) {
       update(() => emptyState())
@@ -277,9 +281,13 @@ export default function App() {
       <div className="app">
         <CategoriesPage
           categories={state.categories}
+          expenses={realPeriodExpenses}
+          currency={state.settings.currency}
+          monthLabel={realMonthLabel}
           onAdd={addCategory}
           onRename={renameCategory}
           onDelete={deleteCategory}
+          onDeleteExpense={deleteExpense}
           onBack={() => setSubView('none')}
         />
       </div>

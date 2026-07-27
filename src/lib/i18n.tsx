@@ -183,6 +183,11 @@ const DICT: Record<string, Entry> = {
     zh: '改名会同步更新已记录的账目;删除不会影响历史记录,只是以后选不到了。',
     en: "Renaming updates past entries too; deleting doesn't touch history — it just won't show up as a choice anymore.",
   },
+  category_edit: { zh: '编辑', en: 'Edit' },
+  delete_category: { zh: '删除分类', en: 'Delete category' },
+  confirm_delete_category: { zh: '删除分类"{name}"?历史记录不受影响。', en: 'Delete category "{name}"? Past records are unaffected.' },
+  records_count: { zh: '{v} 笔', en: '{v} records' },
+  category_no_records: { zh: '这个月这个分类还没有记录。', en: 'No records in this category this month.' },
 
   // Stats
   tab_ledger: { zh: '账目', en: 'Ledger' },
