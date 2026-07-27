@@ -19,6 +19,7 @@
     "@capacitor/app": "^8.1.1",
     "@capacitor/core": "^8.4.2",
     "@capacitor/ios": "^8.4.2",
+    "@vercel/analytics": "^2.0.1",
     "ai": "^4.3.19",
     "aws-jwt-verify": "^5.2.1",
     "react": "^18.3.1",

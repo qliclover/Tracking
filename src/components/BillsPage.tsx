@@ -100,7 +100,7 @@ export function BillsPage({
           <div className="wordmark serif cjk page-title">{t('fixed_bills')}</div>
           <div className="page-sub">{t('bills_count_short', { v: recurring.length })}</div>
         </div>
-        <button type="button" className="round-btn round-btn-dark" aria-label={t('add_bill')} onClick={onAddOpen}>
+        <button type="button" className="round-btn round-btn-dark" aria-label={t('new_entry')} onClick={onAddOpen}>
           +
         </button>
       </div>
