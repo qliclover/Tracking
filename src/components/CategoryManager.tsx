@@ -93,25 +93,29 @@ export function CategoryManager({ categories, onAdd, onRename, onDelete }: Props
             )}
           </li>
         ))}
-      </ul>
-
-      {error && <p className="error">{error}</p>}
-
-      <div className="two">
-        <div className="field" style={{ flex: 2, marginBottom: 0 }}>
+        <li className="row add-category-row">
           <input
+            className="add-category-input"
             placeholder={t('category_add_ph')}
             value={newName}
             onChange={(e) => setNewName(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && add()}
           />
-        </div>
-        <button className="btn btn-ghost" style={{ flex: 1 }} onClick={add}>
-          {t('category_add')}
-        </button>
-      </div>
+          <button
+            type="button"
+            className="round-btn round-btn-dark"
+            aria-label={t('category_add')}
+            onClick={add}
+            disabled={!newName.trim()}
+          >
+            +
+          </button>
+        </li>
+      </ul>
 
-      <p className="muted" style={{ lineHeight: 1.6, margin: '12px 0 0' }}>{t('category_hint')}</p>
+      {error && <p className="error">{error}</p>}
+
+      <p className="muted" style={{ lineHeight: 1.6, margin: '4px 0 0' }}>{t('category_hint')}</p>
     </section>
   )
 }
