@@ -14,9 +14,10 @@ interface Props {
   currency: string
   daysElapsed: number
   summary: BudgetSummary
+  onOpenCategory: (name: string) => void
 }
 
-export function Insights({ expenses, categories, period, currency, daysElapsed, summary }: Props) {
+export function Insights({ expenses, categories, period, currency, daysElapsed, summary, onOpenCategory }: Props) {
   const t = useT()
   const lang = useLang()
 
@@ -59,21 +60,28 @@ export function Insights({ expenses, categories, period, currency, daysElapsed, 
       <ul className="cat-stats">
         {cats.map((c) => (
           <li key={c.category}>
-            <div className="cat-stat-top">
-              <span className="cat-stat-name">
-                <span className="dot" style={{ background: categoryColor(c.category, categories) }} />
-                {categoryDisplay(c.category, lang)}
-              </span>
-              <span className="cat-stat-amt">
-                {money(c.total, currency)} <span className="muted">{Math.round(c.pct * 100)}%</span>
-              </span>
-            </div>
-            <div className="cat-bar">
-              <div
-                className="cat-bar-fill"
-                style={{ width: `${Math.max(2, c.pct * 100)}%`, background: categoryColor(c.category, categories) }}
-              />
-            </div>
+            <button
+              type="button"
+              className="cat-stat-row"
+              onClick={() => onOpenCategory(c.category)}
+            >
+              <div className="cat-stat-top">
+                <span className="cat-stat-name">
+                  <span className="dot" style={{ background: categoryColor(c.category, categories) }} />
+                  {categoryDisplay(c.category, lang)}
+                </span>
+                <span className="cat-stat-amt">
+                  {money(c.total, currency)} <span className="muted">{Math.round(c.pct * 100)}%</span>
+                  <span className="muted cat-stat-chevron">›</span>
+                </span>
+              </div>
+              <div className="cat-bar">
+                <div
+                  className="cat-bar-fill"
+                  style={{ width: `${Math.max(2, c.pct * 100)}%`, background: categoryColor(c.category, categories) }}
+                />
+              </div>
+            </button>
           </li>
         ))}
       </ul>

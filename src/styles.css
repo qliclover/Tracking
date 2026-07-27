@@ -896,6 +896,20 @@ button {
 .cat-stats li {
   padding: 10px 0;
 }
+.cat-stat-row {
+  width: 100%;
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  text-align: left;
+  font-family: inherit;
+  color: inherit;
+}
+.cat-stat-chevron {
+  font-size: 14px;
+  margin-left: 6px;
+}
 .cat-stat-top {
   display: flex;
   justify-content: space-between;

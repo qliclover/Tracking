@@ -16,6 +16,7 @@ import { EntryMode } from './components/EntrySection'
 import { EntrySheet } from './components/EntrySheet'
 import { ExpenseList } from './components/ExpenseList'
 import { Insights } from './components/Insights'
+import { CategoryRecordsPage } from './components/CategoryRecordsPage'
 import { BillsPage } from './components/BillsPage'
 import { AddBillSheet } from './components/AddBillSheet'
 import { TabBar, MainTab } from './components/TabBar'
@@ -37,6 +38,7 @@ export default function App() {
   const [prefill, setPrefill] = useState<{ category: string; nonce: number } | null>(null)
   const [viewAnchor, setViewAnchor] = useState<Date>(() => new Date())
   const [ledgerExpanded, setLedgerExpanded] = useState(false)
+  const [statsCategory, setStatsCategory] = useState<string | null>(null)
 
   useEffect(() => {
     saveState(state)
@@ -250,10 +252,6 @@ export default function App() {
   const lang = state.settings.lang
   const t = (k: string, p?: Record<string, string | number>) => translate(k, lang, p)
 
-  const realYear = realPeriod.start.getFullYear()
-  const realMonthName = periodMonthName(realPeriod, lang)
-  const realMonthLabel = lang === 'zh' ? `${realYear}年 ${realMonthName}` : `${realMonthName} ${realYear}`
-
   function clearAll() {
     if (confirm(t('confirm_clear'))) {
       update(() => emptyState())
@@ -281,13 +279,9 @@ export default function App() {
       <div className="app">
         <CategoriesPage
           categories={state.categories}
-          expenses={realPeriodExpenses}
-          currency={state.settings.currency}
-          monthLabel={realMonthLabel}
           onAdd={addCategory}
           onRename={renameCategory}
           onDelete={deleteCategory}
-          onDeleteExpense={deleteExpense}
           onBack={() => setSubView('none')}
         />
       </div>
@@ -356,24 +350,42 @@ export default function App() {
           </>
         )}
 
-        {tab === 'stats' && (
-          <>
-            <div className="page-head">
-              <div>
-                <div className="wordmark serif cjk page-title">{t('tab_stats')}</div>
-                <div className="page-sub">{lang === 'zh' ? `${year}年 ${monthName}` : `${monthName} ${year}`}</div>
+        {tab === 'stats' && (() => {
+          const statsMonthLabel = lang === 'zh' ? `${year}年 ${monthName}` : `${monthName} ${year}`
+          const openCategory = statsCategory ? state.categories.find((c) => c.name === statsCategory) : undefined
+          if (openCategory) {
+            return (
+              <CategoryRecordsPage
+                category={openCategory}
+                categories={state.categories}
+                expenses={periodExpenses}
+                currency={state.settings.currency}
+                monthLabel={statsMonthLabel}
+                onDeleteExpense={deleteExpense}
+                onBack={() => setStatsCategory(null)}
+              />
+            )
+          }
+          return (
+            <>
+              <div className="page-head">
+                <div>
+                  <div className="wordmark serif cjk page-title">{t('tab_stats')}</div>
+                  <div className="page-sub">{statsMonthLabel}</div>
+                </div>
               </div>
-            </div>
-            <Insights
-              expenses={periodExpenses}
-              categories={state.categories}
-              period={period}
-              currency={state.settings.currency}
-              daysElapsed={daysElapsed}
-              summary={summary}
-            />
-          </>
-        )}
+              <Insights
+                expenses={periodExpenses}
+                categories={state.categories}
+                period={period}
+                currency={state.settings.currency}
+                daysElapsed={daysElapsed}
+                summary={summary}
+                onOpenCategory={setStatsCategory}
+              />
+            </>
+          )
+        })()}
 
         {tab === 'bills' && (
           <BillsPage
@@ -413,6 +425,7 @@ export default function App() {
         onTab={(next) => {
           setTab(next)
           setLedgerExpanded(false)
+          setStatsCategory(null)
         }}
         onAdd={() => setSheet('entry')}
       />
