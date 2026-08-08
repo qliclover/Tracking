@@ -12,8 +12,7 @@ interface Props {
   postedRecurring: string[]
   period: Period
   reserved: number
-  onUpdate: (id: string, patch: Partial<Recurring>) => void
-  onDelete: (id: string) => void
+  onEdit: (rec: Recurring) => void
   onAddOpen: () => void
 }
 
@@ -43,8 +42,7 @@ function BillRow({
   t,
   status,
   dimmed,
-  onToggle,
-  onDelete,
+  onEdit,
 }: {
   rec: Recurring
   currency: string
@@ -53,11 +51,17 @@ function BillRow({
   t: TFn
   status?: string
   dimmed?: boolean
-  onToggle: () => void
-  onDelete: () => void
+  onEdit: () => void
 }) {
   return (
-    <li className="row">
+    <li className="row row-tap" role="button" tabIndex={0} onClick={onEdit}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault()
+          onEdit()
+        }
+      }}
+    >
       <div className="r-main" style={dimmed ? { opacity: 0.5 } : undefined}>
         <span className="dot" style={{ background: categoryColor(rec.category, categories) }} />
         <div className="r-text">
@@ -69,10 +73,7 @@ function BillRow({
         <div className="r-amt serif">{money(rec.amount, currency)}</div>
         {status && <div className="bill-status">{status}</div>}
       </div>
-      <button className="link" style={{ marginLeft: 8, fontSize: 12 }} onClick={onToggle}>
-        {dimmed ? t('resume') : t('pause')}
-      </button>
-      <button className="r-del" aria-label={t('remove')} onClick={onDelete}>×</button>
+      <span className="r-chev" aria-hidden="true">›</span>
     </li>
   )
 }
@@ -84,8 +85,7 @@ export function BillsPage({
   postedRecurring,
   period,
   reserved,
-  onUpdate,
-  onDelete,
+  onEdit,
   onAddOpen,
 }: Props) {
   const t = useT()
@@ -124,8 +124,7 @@ export function BillsPage({
                 lang={lang}
                 t={t}
                 status={statusText(r, period, postedRecurring, t)}
-                onToggle={() => onUpdate(r.id, { active: false })}
-                onDelete={() => onDelete(r.id)}
+                onEdit={() => onEdit(r)}
               />
             ))}
           </ul>
@@ -145,8 +144,7 @@ export function BillsPage({
                 lang={lang}
                 t={t}
                 dimmed
-                onToggle={() => onUpdate(r.id, { active: true })}
-                onDelete={() => onDelete(r.id)}
+                onEdit={() => onEdit(r)}
               />
             ))}
           </ul>

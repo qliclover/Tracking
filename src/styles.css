@@ -659,6 +659,18 @@ body {
 .row .r-del:hover {
   color: var(--danger);
 }
+.row.row-tap {
+  cursor: pointer;
+}
+.row.row-tap:active {
+  opacity: 0.6;
+}
+.row .r-chev {
+  color: var(--faint);
+  font-size: 20px;
+  line-height: 1;
+  padding-left: 8px;
+}
 
 .empty {
   padding: 40px 0;
@@ -817,6 +829,11 @@ body {
   display: flex;
   gap: 12px;
   margin-top: 8px;
+}
+.sheet-extra-actions {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 18px;
 }
 .theme-row {
   display: flex;

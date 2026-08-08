@@ -18,7 +18,7 @@ import { ExpenseList } from './components/ExpenseList'
 import { Insights } from './components/Insights'
 import { CategoryRecordsPage } from './components/CategoryRecordsPage'
 import { BillsPage } from './components/BillsPage'
-import { AddBillSheet } from './components/AddBillSheet'
+import { BillSheet } from './components/BillSheet'
 import { TabBar, MainTab } from './components/TabBar'
 import { SettingsPage } from './components/SettingsPage'
 import { CategoriesPage } from './components/CategoriesPage'
@@ -26,7 +26,7 @@ import { ProfilePage } from './components/ProfilePage'
 import { SyncSettingsPage } from './components/SyncSettingsPage'
 
 type SubView = 'none' | 'profile' | 'categories' | 'sync'
-type SheetView = 'none' | 'entry' | 'addBill'
+type SheetView = 'none' | 'entry' | 'bill'
 
 export default function App() {
   const [state, setState] = useState<AppState>(() => loadState())
@@ -39,6 +39,7 @@ export default function App() {
   const [viewAnchor, setViewAnchor] = useState<Date>(() => new Date())
   const [ledgerExpanded, setLedgerExpanded] = useState(false)
   const [statsCategory, setStatsCategory] = useState<string | null>(null)
+  const [editingBill, setEditingBill] = useState<Recurring | null>(null)
 
   useEffect(() => {
     saveState(state)
@@ -395,9 +396,14 @@ export default function App() {
             postedRecurring={state.postedRecurring}
             period={realPeriod}
             reserved={realReserved}
-            onUpdate={updateRecurring}
-            onDelete={deleteRecurring}
-            onAddOpen={() => setSheet('addBill')}
+            onEdit={(rec) => {
+              setEditingBill(rec)
+              setSheet('bill')
+            }}
+            onAddOpen={() => {
+              setEditingBill(null)
+              setSheet('bill')
+            }}
           />
         )}
 
@@ -445,11 +451,17 @@ export default function App() {
         prefillKey={prefill?.nonce}
       />
 
-      <AddBillSheet
-        open={sheet === 'addBill'}
+      <BillSheet
+        open={sheet === 'bill'}
+        editing={editingBill}
         categories={state.categories}
         onAdd={addRecurring}
-        onClose={() => setSheet('none')}
+        onSave={updateRecurring}
+        onDelete={deleteRecurring}
+        onClose={() => {
+          setSheet('none')
+          setEditingBill(null)
+        }}
       />
     </div>
     </LangProvider>

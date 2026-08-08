@@ -158,6 +158,17 @@ const DICT: Record<string, Entry> = {
   charged_day: { zh: '每月扣费日', en: 'Charged on day' },
   add_bill: { zh: '添加', en: 'Add bill' },
   add_bill_title: { zh: '添加固定账单', en: 'Add a fixed bill' },
+  edit_bill_title: { zh: '编辑固定账单', en: 'Edit fixed bill' },
+  save_bill: { zh: '保存', en: 'Save' },
+  delete_bill: { zh: '删除账单', en: 'Delete bill' },
+  confirm_delete_bill: {
+    zh: '删除"{name}"?已经入账的记录不受影响。',
+    en: 'Delete "{name}"? Charges already posted are unaffected.',
+  },
+  bill_paused_hint: {
+    zh: '已暂停:这笔账单不会自动入账,也不会从"本月可花"里预留。',
+    en: "Paused: this bill won't post automatically, and nothing is reserved from \"left to spend\".",
+  },
   cancel: { zh: '取消', en: 'Cancel' },
   err_bill_name: { zh: '给账单起个名字。', en: 'Give the bill a name.' },
   err_day: { zh: '日期需为 1–31。', en: 'Day must be 1–31.' },
