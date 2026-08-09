@@ -1308,6 +1308,22 @@ button {
   margin-top: 4px;
 }
 
+.search-box {
+  width: 100%;
+  border: 1px solid var(--border-2);
+  border-radius: 10px;
+  background: transparent;
+  color: var(--fg);
+  font-family: var(--sans);
+  font-size: 15px;
+  padding: 10px 12px;
+  margin: 14px 0;
+  outline: none;
+}
+.search-box::placeholder {
+  color: var(--faint);
+}
+
 /* ---- Bills tab ---- */
 .round-btn {
   width: 34px;

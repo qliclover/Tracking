@@ -7,7 +7,7 @@ import { LangProvider, translate } from './lib/i18n'
 import { pendingCharges, reservedForPeriod } from './lib/recurring'
 import { summarize } from './lib/budget'
 import { nextColor } from './lib/categoryColors'
-import { resolveAiCategory } from './lib/categories'
+import { resolveAiCategory, categoryDisplay } from './lib/categories'
 import { Theme, getTheme, applyTheme } from './lib/theme'
 import { useSync } from './lib/useSync'
 import { syncWidget } from './lib/widget'
@@ -39,6 +39,7 @@ export default function App() {
   const [prefill, setPrefill] = useState<{ category: string; nonce: number } | null>(null)
   const [viewAnchor, setViewAnchor] = useState<Date>(() => new Date())
   const [ledgerExpanded, setLedgerExpanded] = useState(false)
+  const [ledgerSearch, setLedgerSearch] = useState('')
   const [statsCategory, setStatsCategory] = useState<string | null>(null)
   const [editingBill, setEditingBill] = useState<Recurring | null>(null)
   const [editingExpense, setEditingExpense] = useState<Expense | null>(null)
@@ -117,6 +118,18 @@ export default function App() {
     () => expensesForPeriod(state.expenses, period),
     [state.expenses, period],
   )
+  const searchedExpenses = useMemo(() => {
+    const q = ledgerSearch.trim().toLowerCase()
+    if (!q) return periodExpenses
+    return periodExpenses.filter((e) => {
+      const catName = categoryDisplay(e.category, state.settings.lang).toLowerCase()
+      return (
+        (e.note ?? '').toLowerCase().includes(q) ||
+        catName.includes(q) ||
+        (e.merchant ?? '').toLowerCase().includes(q)
+      )
+    })
+  }, [periodExpenses, ledgerSearch, state.settings.lang])
   const reserved = useMemo(() => reservedForPeriod(state, period), [state, period])
   const summary = useMemo(
     () => summarize(periodExpenses, state.settings, { daysLeft: daysLeftInPeriod(period), reserved }),
@@ -363,12 +376,31 @@ export default function App() {
                 <div className="wordmark serif cjk page-title">{t('tab_ledger')}</div>
                 <div className="page-sub">{monthName} · {periodExpenses.length}</div>
               </div>
-              <button type="button" className="theme-toggle" onClick={() => setLedgerExpanded(false)}>
+              <button
+                type="button"
+                className="theme-toggle"
+                onClick={() => {
+                  setLedgerExpanded(false)
+                  setLedgerSearch('')
+                }}
+              >
                 {t('done')}
               </button>
             </div>
+            <input
+              type="text"
+              className="search-box"
+              placeholder={t('search_placeholder')}
+              value={ledgerSearch}
+              onChange={(ev) => setLedgerSearch(ev.target.value)}
+            />
+            {ledgerSearch.trim() && searchedExpenses.length === 0 ? (
+              <section className="empty">
+                <p>{t('search_no_results')}</p>
+              </section>
+            ) : (
             <ExpenseList
-              expenses={periodExpenses}
+              expenses={searchedExpenses}
               categories={state.categories}
               currency={state.settings.currency}
               onDelete={deleteExpense}
@@ -378,6 +410,7 @@ export default function App() {
                 setSheet('expense')
               }}
             />
+            )}
           </>
         )}
 

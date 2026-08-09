@@ -202,6 +202,8 @@ const DICT: Record<string, Entry> = {
   confirm_delete_category: { zh: '删除分类"{name}"?历史记录不受影响。', en: 'Delete category "{name}"? Past records are unaffected.' },
   records_count: { zh: '{v} 笔', en: '{v} records' },
   category_no_records: { zh: '这个月这个分类还没有记录。', en: 'No records in this category this month.' },
+  search_placeholder: { zh: '搜索备注或分类', en: 'Search notes or category' },
+  search_no_results: { zh: '没有找到匹配的记录。', en: 'No records match your search.' },
 
   // Stats
   tab_ledger: { zh: '账目', en: 'Ledger' },
