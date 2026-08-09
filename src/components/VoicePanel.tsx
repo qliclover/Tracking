@@ -68,7 +68,7 @@ export function VoicePanel({ currency, categories, onAdd }: Props) {
         categories={categories}
         initial={draft}
         submitKey="save_expense"
-        header={<DraftHeader draft={draft} currency={currency} />}
+        header={<DraftHeader draft={draft} currency={currency} limit={6} />}
         onCancel={() => {
           setDraft(null)
           setTyped('')

@@ -2,6 +2,7 @@ import { Category, Expense } from '../lib/types'
 import { ExpenseDraft } from '../lib/receipt'
 import { useT } from '../lib/i18n'
 import { ExpenseForm } from './ExpenseForm'
+import { DraftHeader } from './DraftHeader'
 
 interface Props {
   open: boolean
@@ -48,6 +49,11 @@ export function ExpenseSheet({ open, editing, currency, categories, onSave, onDe
             source: editing.source === 'recurring' ? 'manual' : editing.source,
           }}
           submitKey="save_expense"
+          header={
+            editing.items && editing.items.length > 0 ? (
+              <DraftHeader draft={editing} currency={currency} />
+            ) : undefined
+          }
           onCancel={onClose}
           onSubmit={(draft) => {
             onSave(editing.id, draft)

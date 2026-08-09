@@ -1,10 +1,19 @@
-import { ExpenseDraft } from '../lib/receipt'
 import { money } from '../lib/format'
 import { useT } from '../lib/i18n'
 
-/** Small readout shown above the confirm form for scan/voice drafts. */
-export function DraftHeader({ draft, currency }: { draft: ExpenseDraft; currency: string }) {
+interface DraftLike {
+  source?: 'manual' | 'scan' | 'voice' | 'recurring'
+  merchant?: string
+  items?: { name: string; price: number }[]
+}
+
+/** Small readout shown above the confirm form for scan/voice drafts, and above the
+ * edit form for a saved expense that has an itemized receipt. `limit` truncates the
+ * list with a "+N more" hint; omit it to always show every item (the saved-expense case). */
+export function DraftHeader({ draft, currency, limit }: { draft: DraftLike; currency: string; limit?: number }) {
   const t = useT()
+  const items = draft.items ?? []
+  const shown = limit ? items.slice(0, limit) : items
   return (
     <div style={{ marginBottom: 18 }}>
       <p className="section-head">{draft.source === 'scan' ? t('from_receipt') : t('from_voice')}</p>
@@ -13,9 +22,9 @@ export function DraftHeader({ draft, currency }: { draft: ExpenseDraft; currency
           {draft.merchant}
         </div>
       )}
-      {draft.items && draft.items.length > 0 && (
+      {items.length > 0 && (
         <ul style={{ listStyle: 'none', margin: '0 0 4px', padding: 0 }}>
-          {draft.items.slice(0, 6).map((it, i) => (
+          {shown.map((it, i) => (
             <li
               key={i}
               style={{
@@ -30,9 +39,9 @@ export function DraftHeader({ draft, currency }: { draft: ExpenseDraft; currency
               <span>{money(it.price, currency)}</span>
             </li>
           ))}
-          {draft.items.length > 6 && (
+          {limit && items.length > limit && (
             <li style={{ fontSize: 12, color: 'var(--faint)' }}>
-              {t('more_items', { v: draft.items.length - 6 })}
+              {t('more_items', { v: items.length - limit })}
             </li>
           )}
         </ul>
