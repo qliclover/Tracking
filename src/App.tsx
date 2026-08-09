@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { AppState, Profile, Recurring, Settings } from './lib/types'
+import { AppState, Expense, Profile, Recurring, Settings } from './lib/types'
 import { ExpenseDraft } from './lib/receipt'
 import { loadState, saveState, makeExpense, emptyState, newId } from './lib/storage'
 import { currentPeriod, expensesForPeriod, daysLeftInPeriod, periodMonthName } from './lib/period'
@@ -14,6 +14,7 @@ import { syncWidget } from './lib/widget'
 import { BudgetCard } from './components/BudgetCard'
 import { EntryMode } from './components/EntrySection'
 import { EntrySheet } from './components/EntrySheet'
+import { ExpenseSheet } from './components/ExpenseSheet'
 import { ExpenseList } from './components/ExpenseList'
 import { Insights } from './components/Insights'
 import { CategoryRecordsPage } from './components/CategoryRecordsPage'
@@ -26,7 +27,7 @@ import { ProfilePage } from './components/ProfilePage'
 import { SyncSettingsPage } from './components/SyncSettingsPage'
 
 type SubView = 'none' | 'profile' | 'categories' | 'sync'
-type SheetView = 'none' | 'entry' | 'bill'
+type SheetView = 'none' | 'entry' | 'bill' | 'expense'
 
 export default function App() {
   const [state, setState] = useState<AppState>(() => loadState())
@@ -40,6 +41,7 @@ export default function App() {
   const [ledgerExpanded, setLedgerExpanded] = useState(false)
   const [statsCategory, setStatsCategory] = useState<string | null>(null)
   const [editingBill, setEditingBill] = useState<Recurring | null>(null)
+  const [editingExpense, setEditingExpense] = useState<Expense | null>(null)
 
   useEffect(() => {
     saveState(state)
@@ -161,6 +163,26 @@ export default function App() {
 
   function deleteExpense(id: string) {
     update((s) => ({ ...s, expenses: s.expenses.filter((e) => e.id !== id) }))
+  }
+
+  function updateExpense(id: string, draft: ExpenseDraft) {
+    update((s) => ({
+      ...s,
+      expenses: s.expenses.map((e) =>
+        e.id === id
+          ? {
+              ...e,
+              amount: draft.amount,
+              category: draft.category,
+              note: draft.note || undefined,
+              date: draft.date,
+              source: draft.source,
+              merchant: draft.merchant,
+              items: draft.items,
+            }
+          : e,
+      ),
+    }))
   }
 
   function saveSettings(next: Settings) {
@@ -326,6 +348,10 @@ export default function App() {
               onDelete={deleteExpense}
               limit={2}
               onSeeAll={() => setLedgerExpanded(true)}
+              onOpen={(e) => {
+                setEditingExpense(e)
+                setSheet('expense')
+              }}
             />
           </>
         )}
@@ -347,6 +373,10 @@ export default function App() {
               currency={state.settings.currency}
               onDelete={deleteExpense}
               showFullDate
+              onOpen={(e) => {
+                setEditingExpense(e)
+                setSheet('expense')
+              }}
             />
           </>
         )}
@@ -363,6 +393,10 @@ export default function App() {
                 currency={state.settings.currency}
                 monthLabel={statsMonthLabel}
                 onDeleteExpense={deleteExpense}
+                onOpenExpense={(e) => {
+                  setEditingExpense(e)
+                  setSheet('expense')
+                }}
                 onBack={() => setStatsCategory(null)}
               />
             )
@@ -461,6 +495,19 @@ export default function App() {
         onClose={() => {
           setSheet('none')
           setEditingBill(null)
+        }}
+      />
+
+      <ExpenseSheet
+        open={sheet === 'expense'}
+        editing={editingExpense}
+        currency={state.settings.currency}
+        categories={state.categories}
+        onSave={updateExpense}
+        onDelete={deleteExpense}
+        onClose={() => {
+          setSheet('none')
+          setEditingExpense(null)
         }}
       />
     </div>

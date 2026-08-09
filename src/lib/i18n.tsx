@@ -30,6 +30,9 @@ const DICT: Record<string, Entry> = {
   save_expense: { zh: '保存', en: 'Save expense' },
   discard: { zh: '放弃', en: 'Discard' },
   err_amount: { zh: '请输入大于 0 的金额。', en: 'Enter an amount greater than 0.' },
+  edit_expense_title: { zh: '编辑账目', en: 'Edit expense' },
+  delete_expense: { zh: '删除账目', en: 'Delete expense' },
+  confirm_delete_expense: { zh: '删除这笔账目?此操作不可撤销。', en: 'Delete this expense? This cannot be undone.' },
 
   // Categories
   cat_Food: { zh: '餐饮', en: 'Food' },

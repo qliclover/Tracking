@@ -46,9 +46,11 @@ interface Props {
   /** Show the exact date alongside the relative label (the full Ledger tab). */
   showFullDate?: boolean
   onSeeAll?: () => void
+  /** Tapping a row opens its detail/edit sheet. Omit to keep rows non-interactive. */
+  onOpen?: (expense: Expense) => void
 }
 
-export function ExpenseList({ expenses, categories, currency, onDelete, limit, showFullDate, onSeeAll }: Props) {
+export function ExpenseList({ expenses, categories, currency, onDelete, limit, showFullDate, onSeeAll, onOpen }: Props) {
   const t = useT()
   const lang = useLang()
 
@@ -79,7 +81,23 @@ export function ExpenseList({ expenses, categories, currency, onDelete, limit, s
           </div>
           <ul style={{ listStyle: 'none', margin: 0, padding: 0 }}>
             {g.list.map((e) => (
-              <li key={e.id} className="row">
+              <li
+                key={e.id}
+                className={onOpen ? 'row row-tap' : 'row'}
+                role={onOpen ? 'button' : undefined}
+                tabIndex={onOpen ? 0 : undefined}
+                onClick={onOpen ? () => onOpen(e) : undefined}
+                onKeyDown={
+                  onOpen
+                    ? (ev) => {
+                        if (ev.key === 'Enter' || ev.key === ' ') {
+                          ev.preventDefault()
+                          onOpen(e)
+                        }
+                      }
+                    : undefined
+                }
+              >
                 <div className="r-main">
                   <span
                     className="dot"
@@ -94,7 +112,10 @@ export function ExpenseList({ expenses, categories, currency, onDelete, limit, s
                 <button
                   className="r-del"
                   aria-label={t('remove')}
-                  onClick={() => onDelete(e.id)}
+                  onClick={(ev) => {
+                    ev.stopPropagation()
+                    onDelete(e.id)
+                  }}
                   title={t('remove')}
                 >
                   ×

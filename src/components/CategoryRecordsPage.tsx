@@ -10,13 +10,14 @@ interface Props {
   currency: string
   monthLabel: string
   onDeleteExpense: (id: string) => void
+  onOpenExpense: (expense: Expense) => void
   onBack: () => void
 }
 
-/** Read-only browse view for one category's expenses this period — reached by tapping
- * a row in Stats' "by category" breakdown. Renaming/deleting the category itself lives
- * in Settings > Categories, not here. */
-export function CategoryRecordsPage({ category, categories, expenses, currency, monthLabel, onDeleteExpense, onBack }: Props) {
+/** Browse view for one category's expenses this period — reached by tapping a row in
+ * Stats' "by category" breakdown. Renaming/deleting the *category* itself lives in
+ * Settings > Categories, not here — but individual expense rows are still tappable to edit. */
+export function CategoryRecordsPage({ category, categories, expenses, currency, monthLabel, onDeleteExpense, onOpenExpense, onBack }: Props) {
   const t = useT()
   const lang = useLang()
   const catExpenses = expenses.filter((e) => e.category === category.name)
@@ -42,6 +43,7 @@ export function CategoryRecordsPage({ category, categories, expenses, currency, 
           currency={currency}
           onDelete={onDeleteExpense}
           showFullDate
+          onOpen={onOpenExpense}
         />
       )}
 
