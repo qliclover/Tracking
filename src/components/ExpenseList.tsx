@@ -114,7 +114,7 @@ export function ExpenseList({ expenses, categories, currency, onDelete, limit, s
                   aria-label={t('remove')}
                   onClick={(ev) => {
                     ev.stopPropagation()
-                    onDelete(e.id)
+                    if (confirm(t('confirm_delete_expense'))) onDelete(e.id)
                   }}
                   title={t('remove')}
                 >
