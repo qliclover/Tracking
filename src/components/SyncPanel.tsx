@@ -1,4 +1,5 @@
 import { FormEvent, useState } from 'react'
+import { AppState } from '../lib/types'
 import { useT } from '../lib/i18n'
 import { SyncStatus } from '../lib/useSync'
 
@@ -6,6 +7,9 @@ export interface SyncProp {
   status: SyncStatus
   username: string | null
   lastError: string
+  conflict: { local: AppState; remote: AppState } | null
+  keepLocal: () => void
+  keepRemote: () => void
   syncNow: () => void
   login: (username: string, password: string) => Promise<void>
   signup: (username: string, email: string, password: string) => Promise<void>
@@ -21,6 +25,7 @@ const SYNC_TK: Record<string, string> = {
   syncing: 'sync_syncing',
   synced: 'sync_synced',
   error: 'sync_error',
+  conflict: 'sync_conflict',
 }
 
 type Mode = 'login' | 'signup' | 'confirm' | 'forgot-request' | 'forgot-reset'
@@ -265,6 +270,21 @@ export function SyncPanel({ sync }: { sync: SyncProp }) {
         </div>
         <button className="link" onClick={sync.syncNow}>{t('sync_now')}</button>
       </div>
+
+      {sync.status === 'conflict' && sync.conflict && (
+        <div style={{ margin: '8px 0', padding: '12px', border: '1px solid var(--border-2)', borderRadius: 10 }}>
+          <p className="r-sub" style={{ marginBottom: 10 }}>{t('sync_conflict_desc')}</p>
+          <div className="two">
+            <button type="button" className="btn btn-ghost" onClick={sync.keepLocal}>
+              {t('sync_keep_local')}
+            </button>
+            <button type="button" className="btn btn-primary" onClick={sync.keepRemote}>
+              {t('sync_keep_remote')}
+            </button>
+          </div>
+        </div>
+      )}
+
       <button className="link danger" style={{ marginTop: 8 }} onClick={sync.logout}>
         {t('sync_logout')}
       </button>

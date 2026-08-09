@@ -87,7 +87,9 @@ export function SettingsPage({
     ? t('not_signed_in')
     : sync.status === 'error'
       ? sync.lastError
-      : `${t(sync.status === 'synced' ? 'sync_synced' : sync.status === 'syncing' ? 'sync_syncing' : 'sync_connecting')} · ${sync.username}`
+      : sync.status === 'conflict'
+        ? t('sync_conflict')
+        : `${t(sync.status === 'synced' ? 'sync_synced' : sync.status === 'syncing' ? 'sync_syncing' : 'sync_connecting')} · ${sync.username}`
 
   return (
     <div className="page settings-v2">

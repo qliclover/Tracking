@@ -110,6 +110,13 @@ const DICT: Record<string, Entry> = {
   sync_syncing: { zh: '同步中…', en: 'Syncing…' },
   sync_synced: { zh: '已同步', en: 'Synced' },
   sync_error: { zh: '同步出错', en: 'Sync error' },
+  sync_conflict: { zh: '需要选择保留哪份', en: 'Choose which version to keep' },
+  sync_conflict_desc: {
+    zh: '这台设备和云端都有对方没有的修改,自动同步可能会丢数据,请选择保留哪一份(另一份会被覆盖)。',
+    en: 'This device and the cloud each have changes the other doesn\'t — syncing automatically could lose data. Pick which version to keep (the other will be overwritten).',
+  },
+  sync_keep_local: { zh: '保留本机', en: 'Keep this device' },
+  sync_keep_remote: { zh: '保留云端', en: 'Keep the cloud' },
   sync_desc_on: { zh: '通过账号在多设备间同步。', en: 'Synced across your devices via your account.' },
   sync_desc_off: { zh: '仅保存在这台设备上。', en: 'Saved on this device only.' },
   sync_now: { zh: '立即同步', en: 'Sync now' },
