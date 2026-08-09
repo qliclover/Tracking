@@ -199,7 +199,7 @@ const DICT: Record<string, Entry> = {
   },
   category_edit: { zh: '编辑', en: 'Edit' },
   delete_category: { zh: '删除分类', en: 'Delete category' },
-  confirm_delete_category: { zh: '删除分类"{name}"?历史记录不受影响。', en: 'Delete category "{name}"? Past records are unaffected.' },
+  confirm_delete_category: { zh: '删除分类"{name}"?这个分类下的账目和账单会转入其他分类。', en: 'Delete category "{name}"? Its expenses and bills will move to another category.' },
   records_count: { zh: '{v} 笔', en: '{v} records' },
   category_no_records: { zh: '这个月这个分类还没有记录。', en: 'No records in this category this month.' },
   search_placeholder: { zh: '搜索备注或分类', en: 'Search notes or category' },

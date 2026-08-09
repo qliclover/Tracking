@@ -245,7 +245,17 @@ export default function App() {
   function deleteCategory(name: string) {
     update((s) => {
       if (s.categories.length <= 1) return s
-      return { ...s, categories: s.categories.filter((c) => c.name !== name) }
+      const remaining = s.categories.filter((c) => c.name !== name)
+      // Reassign anything still pointing at the deleted category to the last
+      // remaining one (the same "Other" fallback resolveAiCategory uses) so
+      // existing expenses/bills stay visible instead of pointing at nothing.
+      const fallback = remaining[remaining.length - 1].name
+      return {
+        ...s,
+        categories: remaining,
+        expenses: s.expenses.map((e) => (e.category === name ? { ...e, category: fallback } : e)),
+        recurring: s.recurring.map((r) => (r.category === name ? { ...r, category: fallback } : r)),
+      }
     })
   }
 

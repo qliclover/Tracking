@@ -39,6 +39,7 @@ export function CategoryManager({ categories, onAdd, onRename, onDelete }: Props
       setError(t('category_last_one'))
       return
     }
+    if (!confirm(t('confirm_delete_category', { name: categoryDisplay(name, lang) }))) return
     onDelete(name)
   }
 
