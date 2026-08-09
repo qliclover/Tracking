@@ -1,7 +1,7 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node'
 import { generateObject } from 'ai'
 import { z } from 'zod'
-import { textModel, hasKey, CATEGORIES, todayISO } from './_lib.js'
+import { textModel, hasKey, CATEGORIES, anchorDate, dateContext } from './_lib.js'
 
 const draftSchema = z.object({
   amount: z.number().describe('Total amount spent, number only'),
@@ -26,7 +26,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
 
   try {
-    const { transcript } = (req.body ?? {}) as { transcript?: string }
+    const { transcript, today } = (req.body ?? {}) as { transcript?: string; today?: string }
     if (!transcript || !transcript.trim()) {
       res.status(400).json({ error: 'No transcript provided.' })
       return
@@ -39,10 +39,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         {
           role: 'user',
           content:
-            `Turn this spoken expense into a structured entry. Today is ${todayISO()}. ` +
+            `Turn this spoken expense into a structured entry. ` +
             `Amount is a number only. Pick the best category from: ${CATEGORIES.join(', ')}. ` +
-            `Resolve relative dates (e.g. "yesterday") to YYYY-MM-DD. ` +
-            `The person may speak any language.\n\nSpoken: "${transcript.trim()}"`,
+            `The person may speak any language.\n\n` +
+            `${dateContext(anchorDate(today))}\n\nSpoken: "${transcript.trim()}"`,
         },
       ],
     })

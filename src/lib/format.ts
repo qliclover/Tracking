@@ -34,6 +34,38 @@ export function todayISO(d: Date = new Date()): string {
   ).padStart(2, '0')}`
 }
 
+/** True only for a real calendar date written as YYYY-MM-DD. */
+export function isValidISODate(v: unknown): v is string {
+  if (typeof v !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(v)) return false
+  const [y, m, d] = v.split('-').map(Number)
+  const dt = new Date(y, m - 1, d)
+  return dt.getFullYear() === y && dt.getMonth() === m - 1 && dt.getDate() === d
+}
+
+/**
+ * Keep an AI-returned date only if it's plausible, else fall back to today.
+ * The models sometimes answer with prose ("昨天"), another format ("08/07/2026"),
+ * or a misread receipt year — anything that isn't a real recent date would
+ * otherwise land in the ledger and break day grouping and month totals.
+ */
+export function safeDate(value: unknown, today: string = todayISO()): string {
+  if (!isValidISODate(value)) return today
+  const days = daysBetween(value, today)
+  // One day of slack ahead for a device clock that's slightly off; nothing
+  // older than five years, which means the year was misread.
+  if (days < -1 || days > 365 * 5) return today
+  return value
+}
+
+/** Whole days from `iso` to `to` — positive when `iso` is in the past. */
+function daysBetween(iso: string, to: string): number {
+  const [y1, m1, d1] = iso.split('-').map(Number)
+  const [y2, m2, d2] = to.split('-').map(Number)
+  return Math.round(
+    (new Date(y2, m2 - 1, d2).getTime() - new Date(y1, m1 - 1, d1).getTime()) / 86400000,
+  )
+}
+
 export function prettyDate(iso: string, lang: 'zh' | 'en' = 'en'): string {
   const [y, m, day] = iso.split('-').map(Number)
   if (!y || !m || !day) return iso

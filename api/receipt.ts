@@ -1,7 +1,7 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node'
 import { generateObject } from 'ai'
 import { z } from 'zod'
-import { visionModel, hasKey, CATEGORIES, todayISO } from './_lib.js'
+import { visionModel, hasKey, CATEGORIES, anchorDate } from './_lib.js'
 
 const receiptSchema = z.object({
   merchant: z.string().describe('Store or merchant name'),
@@ -39,8 +39,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
 
   try {
-    const body = (req.body ?? {}) as { image?: string; images?: string[] }
+    const body = (req.body ?? {}) as { image?: string; images?: string[]; today?: string }
     const images = body.images?.length ? body.images : body.image ? [body.image] : []
+    const today = anchorDate(body.today)
     if (!images.length) {
       res.status(400).json({ error: 'No image provided.' })
       return
@@ -65,7 +66,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
                   : `This is a photo of a receipt. `) +
                 `Extract its details into the schema. ` +
                 `Money fields are numbers only (no currency symbols). Use null for anything ` +
-                `not present. If the date is missing, use ${todayISO()}. ` +
+                `not present. Today is ${today}. Return the printed date as YYYY-MM-DD; a ` +
+                `receipt may print it as DD/MM/YY or MM/DD/YY, so when the two readings ` +
+                `differ pick the one on or before today — a receipt is never for a future ` +
+                `purchase. If the date is missing or unreadable, use ${today}. ` +
                 `Pick the single best category from: ${CATEGORIES.join(', ')}.`,
             },
             ...images.map((image) => ({ type: 'image' as const, image })),
