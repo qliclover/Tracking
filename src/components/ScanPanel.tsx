@@ -19,13 +19,18 @@ export function ScanPanel({ currency, categories, onAdd }: Props) {
   const t = useT()
   const [images, setImages] = useState<string[]>([])
   const [loading, setLoading] = useState(false)
+  const [picking, setPicking] = useState(false)
   const [error, setError] = useState('')
   const [draft, setDraft] = useState<ExpenseDraft | null>(null)
   const fileRef = useRef<HTMLInputElement>(null)
 
   function pickFiles(e: React.ChangeEvent<HTMLInputElement>) {
-    const files = Array.from(e.target.files ?? []).slice(0, MAX_IMAGES)
+    const files = Array.from(e.target.files ?? []).slice(0, MAX_IMAGES - images.length)
+    // Reset so picking the same file again still fires a change event.
+    e.target.value = ''
     if (!files.length) return
+    setPicking(true)
+    setError('')
     Promise.all(
       files.map(
         (file) =>
@@ -36,14 +41,18 @@ export function ScanPanel({ currency, categories, onAdd }: Props) {
             reader.readAsDataURL(file)
           }),
       ),
-    ).then(async (raw) => {
-      const compressed = await Promise.all(
-        raw.map((dataUrl) => compressImage(dataUrl).catch(() => dataUrl)),
-      )
-      setImages(compressed)
-      setDraft(null)
-      setError('')
-    })
+    )
+      .then(async (raw) => {
+        const compressed = await Promise.all(
+          raw.map((dataUrl) => compressImage(dataUrl).catch(() => dataUrl)),
+        )
+        // Appended, not replaced — the "+" thumb picks more pages for the same
+        // long receipt, it shouldn't discard what was already selected.
+        setImages((prev) => [...prev, ...compressed])
+        setDraft(null)
+      })
+      .catch(() => setError(t('scan_failed')))
+      .finally(() => setPicking(false))
   }
 
   function removeImage(i: number) {
@@ -107,17 +116,28 @@ export function ScanPanel({ currency, categories, onAdd }: Props) {
               </div>
             ))}
             {images.length < MAX_IMAGES && (
-              <button type="button" className="scan-thumb-add" onClick={() => fileRef.current?.click()}>
+              <button
+                type="button"
+                className="scan-thumb-add"
+                onClick={() => fileRef.current?.click()}
+                disabled={picking}
+              >
                 +
               </button>
             )}
           </div>
-          {images.length > 1 && <p className="muted" style={{ marginTop: 8 }}>{t('scan_multi_hint', { v: images.length })}</p>}
+          {picking ? (
+            <p className="muted" style={{ marginTop: 8 }}>{t('picking_photos')}</p>
+          ) : (
+            images.length > 1 && <p className="muted" style={{ marginTop: 8 }}>{t('scan_multi_hint', { v: images.length })}</p>
+          )}
         </div>
       ) : (
-        <button type="button" className="dropzone" onClick={() => fileRef.current?.click()}>
-          <span className="serif cjk" style={{ fontSize: 26 }}>{t('snap_receipt')}</span>
-          <span className="muted">{t('snap_hint')}</span>
+        <button type="button" className="dropzone" onClick={() => fileRef.current?.click()} disabled={picking}>
+          <span className="serif cjk" style={{ fontSize: 26 }}>
+            {picking ? t('picking_photos') : t('snap_receipt')}
+          </span>
+          {!picking && <span className="muted">{t('snap_hint')}</span>}
         </button>
       )}
 
@@ -129,7 +149,7 @@ export function ScanPanel({ currency, categories, onAdd }: Props) {
           className="btn btn-primary"
           style={{ marginTop: 16 }}
           onClick={scan}
-          disabled={loading}
+          disabled={loading || picking}
         >
           {loading ? t('reading') : t('read_receipt')}
         </button>

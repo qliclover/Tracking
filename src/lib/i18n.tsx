@@ -48,6 +48,7 @@ const DICT: Record<string, Entry> = {
   tap_retake: { zh: '点击重拍', en: 'Tap to retake' },
   read_receipt: { zh: '识别小票', en: 'Read receipt' },
   reading: { zh: '识别中…', en: 'Reading…' },
+  picking_photos: { zh: '处理照片中…', en: 'Processing photos…' },
   scan_failed: { zh: '识别失败。', en: 'Scan failed.' },
   scan_multi_hint: { zh: '这 {v} 张会当成同一张小票合并识别。', en: "These {v} photos will be read as one receipt." },
   scan_desc: {
