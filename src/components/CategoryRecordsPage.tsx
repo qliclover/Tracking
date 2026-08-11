@@ -34,7 +34,9 @@ export function CategoryRecordsPage({ category, categories, expenses, currency, 
 
       {catExpenses.length === 0 ? (
         <section className="empty">
-          <p>{t('category_no_records')}</p>
+          <span className="empty-plus">+</span>
+          <span className="serif cjk empty-title">{t('clean_page')}</span>
+          <p style={{ whiteSpace: 'pre-line' }}>{t('category_no_records')}</p>
         </section>
       ) : (
         <ExpenseList

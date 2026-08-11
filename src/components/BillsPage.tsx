@@ -153,7 +153,9 @@ export function BillsPage({
 
       {recurring.length === 0 && (
         <section className="empty">
-          <p>{t('fixed_empty')}</p>
+          <span className="empty-plus">+</span>
+          <span className="serif cjk empty-title">{t('clean_page')}</span>
+          <p style={{ whiteSpace: 'pre-line' }}>{t('fixed_empty')}</p>
         </section>
       )}
     </section>
