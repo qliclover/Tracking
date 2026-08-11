@@ -14,7 +14,7 @@ interface Props {
   onSettings: (s: Settings) => void
   onTheme: (t: Theme) => void
   onExport: () => void
-  onImport: (file: File) => void
+  onImport: (file: File) => Promise<boolean>
   onClear: () => void
   onOpenProfile: () => void
   onOpenCategories: () => void
@@ -63,6 +63,7 @@ export function SettingsPage({
   const t = useT()
   const initial = (profile.name?.trim()?.[0] || '余').toUpperCase()
   const importInput = useRef<HTMLInputElement>(null)
+  const [importError, setImportError] = useState(false)
 
   const [budget, setBudget] = useState(String(settings.monthlyBudget))
   const [warnPct, setWarnPct] = useState(String(Math.round(settings.warnThreshold * 100)))
@@ -208,14 +209,18 @@ export function SettingsPage({
             ref={importInput}
             type="file"
             accept="application/json"
-            onChange={(e) => {
+            onChange={async (e) => {
               const f = e.target.files?.[0]
-              if (f) onImport(f)
               e.target.value = ''
+              if (!f) return
+              setImportError(false)
+              const ok = await onImport(f)
+              if (!ok) setImportError(true)
             }}
             style={{ display: 'none' }}
           />
         </div>
+        {importError && <p className="error">{t('import_bad')}</p>}
 
         <p className="settings-tagline">有余 · {t('tagline')}</p>
       </div>

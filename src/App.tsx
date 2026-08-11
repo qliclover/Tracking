@@ -269,30 +269,36 @@ export default function App() {
     URL.revokeObjectURL(url)
   }
 
-  function importBackup(file: File) {
-    const reader = new FileReader()
-    reader.onload = () => {
-      try {
-        const parsed = JSON.parse(String(reader.result)) as Partial<AppState>
-        update((s) => ({
-          ...s,
-          settings: { ...s.settings, ...(parsed.settings ?? {}) },
-          expenses: Array.isArray(parsed.expenses) ? parsed.expenses : s.expenses,
-          profile: parsed.profile ?? s.profile,
-          categories:
-            Array.isArray(parsed.categories) && parsed.categories.length > 0
-              ? parsed.categories
-              : s.categories,
-          recurring: Array.isArray(parsed.recurring) ? parsed.recurring : s.recurring,
-          postedRecurring: Array.isArray(parsed.postedRecurring)
-            ? parsed.postedRecurring
-            : s.postedRecurring,
-        }))
-      } catch {
-        alert(translate('import_bad', state.settings.lang))
+  /** Resolves true on a successful import, false on a malformed file — the
+   *  caller renders that as an inline error rather than this reaching for alert(). */
+  function importBackup(file: File): Promise<boolean> {
+    return new Promise((resolve) => {
+      const reader = new FileReader()
+      reader.onload = () => {
+        try {
+          const parsed = JSON.parse(String(reader.result)) as Partial<AppState>
+          update((s) => ({
+            ...s,
+            settings: { ...s.settings, ...(parsed.settings ?? {}) },
+            expenses: Array.isArray(parsed.expenses) ? parsed.expenses : s.expenses,
+            profile: parsed.profile ?? s.profile,
+            categories:
+              Array.isArray(parsed.categories) && parsed.categories.length > 0
+                ? parsed.categories
+                : s.categories,
+            recurring: Array.isArray(parsed.recurring) ? parsed.recurring : s.recurring,
+            postedRecurring: Array.isArray(parsed.postedRecurring)
+              ? parsed.postedRecurring
+              : s.postedRecurring,
+          }))
+          resolve(true)
+        } catch {
+          resolve(false)
+        }
       }
-    }
-    reader.readAsText(file)
+      reader.onerror = () => resolve(false)
+      reader.readAsText(file)
+    })
   }
 
   const lang = state.settings.lang
