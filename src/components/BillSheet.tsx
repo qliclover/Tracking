@@ -4,6 +4,7 @@ import { categoryColor } from '../lib/categoryColors'
 import { categoryDisplay } from '../lib/categories'
 import { useT, useLang } from '../lib/i18n'
 import { MAX_AMOUNT } from '../lib/format'
+import { useEscapeKey } from '../lib/useEscapeKey'
 
 interface Props {
   open: boolean
@@ -37,6 +38,8 @@ export function BillSheet({ open, editing, categories, onAdd, onSave, onDelete, 
     setActive(editing?.active ?? true)
     setError('')
   }, [open, editing?.id])
+
+  useEscapeKey(open, onClose)
 
   if (!open) return null
 

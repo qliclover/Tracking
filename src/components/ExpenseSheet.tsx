@@ -1,6 +1,7 @@
 import { Category, Expense } from '../lib/types'
 import { ExpenseDraft } from '../lib/receipt'
 import { useT } from '../lib/i18n'
+import { useEscapeKey } from '../lib/useEscapeKey'
 import { ExpenseForm } from './ExpenseForm'
 import { DraftHeader } from './DraftHeader'
 
@@ -18,6 +19,7 @@ interface Props {
 /** Bottom sheet for viewing/editing a single ledger entry — opened by tapping a row in ExpenseList. */
 export function ExpenseSheet({ open, editing, currency, categories, onSave, onDelete, onClose }: Props) {
   const t = useT()
+  useEscapeKey(open && !!editing, onClose)
 
   if (!open || !editing) return null
 

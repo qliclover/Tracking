@@ -1,5 +1,6 @@
 import { ExpenseDraft } from '../lib/receipt'
 import { Category } from '../lib/types'
+import { useEscapeKey } from '../lib/useEscapeKey'
 import { EntrySection, EntryMode } from './EntrySection'
 
 interface Props {
@@ -16,6 +17,7 @@ interface Props {
 
 /** Bottom sheet hosting manual/scan/voice entry — opened by the tab bar's center FAB. */
 export function EntrySheet({ open, onClose, ...entryProps }: Props) {
+  useEscapeKey(open, onClose)
   if (!open) return null
 
   return (
