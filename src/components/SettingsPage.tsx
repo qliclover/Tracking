@@ -11,6 +11,7 @@ interface Props {
   categories: Category[]
   theme: Theme
   sync: SyncProp
+  notificationsEnabled: boolean
   onSettings: (s: Settings) => void
   onTheme: (t: Theme) => void
   onExport: () => void
@@ -19,6 +20,8 @@ interface Props {
   onOpenProfile: () => void
   onOpenCategories: () => void
   onOpenSync: () => void
+  /** Resolves false if the OS denied notification permission — the caller leaves the toggle off. */
+  onToggleNotifications: (enabled: boolean) => Promise<boolean>
 }
 
 const THEMES: { key: Theme; tk: string }[] = [
@@ -51,6 +54,7 @@ export function SettingsPage({
   categories,
   theme,
   sync,
+  notificationsEnabled,
   onSettings,
   onTheme,
   onExport,
@@ -59,11 +63,20 @@ export function SettingsPage({
   onOpenProfile,
   onOpenCategories,
   onOpenSync,
+  onToggleNotifications,
 }: Props) {
   const t = useT()
   const initial = (profile.name?.trim()?.[0] || '余').toUpperCase()
   const importInput = useRef<HTMLInputElement>(null)
   const [importError, setImportError] = useState(false)
+  const [notifError, setNotifError] = useState(false)
+
+  async function handleToggleNotifications() {
+    setNotifError(false)
+    const next = !notificationsEnabled
+    const ok = await onToggleNotifications(next)
+    if (next && !ok) setNotifError(true)
+  }
 
   const [budget, setBudget] = useState(String(settings.monthlyBudget))
   const [warnPct, setWarnPct] = useState(String(Math.round(settings.warnThreshold * 100)))
@@ -190,6 +203,23 @@ export function SettingsPage({
 
         <div className="card">
           <NavRow title={t('sync')} subtitle={syncSubtitle} onClick={onOpenSync} />
+        </div>
+
+        <div className="card">
+          <div className="card-row card-row-last">
+            <span className="card-row-label">{t('notif_enable')}</span>
+            <label className="switch">
+              <input
+                type="checkbox"
+                checked={notificationsEnabled}
+                onChange={handleToggleNotifications}
+              />
+              <span className="switch-track" />
+              <span className="switch-thumb" />
+            </label>
+          </div>
+          <p className="muted" style={{ marginTop: 10, lineHeight: 1.6 }}>{t('notif_desc')}</p>
+          {notifError && <p className="error" style={{ marginTop: 8 }}>{t('notif_permission_denied')}</p>}
         </div>
 
         <div className="card card-tight">

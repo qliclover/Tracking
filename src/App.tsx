@@ -11,6 +11,12 @@ import { resolveAiCategory, categoryDisplay } from './lib/categories'
 import { Theme, getTheme, applyTheme } from './lib/theme'
 import { useSync } from './lib/useSync'
 import { syncWidget } from './lib/widget'
+import {
+  requestNotificationPermission,
+  scheduleBillReminders,
+  cancelBillReminders,
+  maybeNotifyBudgetWarning,
+} from './lib/notifications'
 import { BudgetCard } from './components/BudgetCard'
 import { EntryMode } from './components/EntrySection'
 import { EntrySheet } from './components/EntrySheet'
@@ -43,6 +49,10 @@ export default function App() {
   const [statsCategory, setStatsCategory] = useState<string | null>(null)
   const [editingBill, setEditingBill] = useState<Recurring | null>(null)
   const [editingExpense, setEditingExpense] = useState<Expense | null>(null)
+  // Per-device, not synced — notification permission is granted per-install, not per-account.
+  const [notificationsEnabled, setNotificationsEnabled] = useState(
+    () => localStorage.getItem('margin.notif.enabled') === '1',
+  )
 
   useEffect(() => {
     saveState(state)
@@ -156,6 +166,33 @@ export default function App() {
     const monthName = periodMonthName(realPeriod, state.settings.lang)
     syncWidget(realSummary, state.settings.currency, label, monthName, state.settings.lang, realPeriodExpenses, state.categories)
   }, [realSummary, state.settings.currency, state.settings.lang, realPeriod, realPeriodExpenses, state.categories])
+
+  // Keep scheduled bill reminders in sync with the actual bill list.
+  useEffect(() => {
+    if (!notificationsEnabled) return
+    scheduleBillReminders(state.recurring, state.settings.lang, state.settings.currency)
+  }, [notificationsEnabled, state.recurring, state.settings.lang, state.settings.currency])
+
+  // Budget-threshold alert — always the REAL current period, same reasoning as the widget sync above:
+  // browsing to a past/future month must never trigger a notification about it.
+  useEffect(() => {
+    if (!notificationsEnabled) return
+    maybeNotifyBudgetWarning(realSummary.level, realPeriod.key, state.settings.lang)
+  }, [notificationsEnabled, realSummary.level, realPeriod.key, state.settings.lang])
+
+  async function toggleNotifications(next: boolean): Promise<boolean> {
+    if (!next) {
+      setNotificationsEnabled(false)
+      localStorage.setItem('margin.notif.enabled', '0')
+      await cancelBillReminders()
+      return true
+    }
+    const granted = await requestNotificationPermission()
+    if (!granted) return false
+    setNotificationsEnabled(true)
+    localStorage.setItem('margin.notif.enabled', '1')
+    return true
+  }
 
   function update(mut: (s: AppState) => AppState) {
     setState((prev) => ({ ...mut(prev), updatedAt: Date.now() }))
@@ -497,6 +534,7 @@ export default function App() {
             categories={state.categories}
             theme={theme}
             sync={sync}
+            notificationsEnabled={notificationsEnabled}
             onSettings={saveSettings}
             onTheme={setTheme}
             onExport={exportBackup}
@@ -505,6 +543,7 @@ export default function App() {
             onOpenProfile={() => setSubView('profile')}
             onOpenCategories={() => setSubView('categories')}
             onOpenSync={() => setSubView('sync')}
+            onToggleNotifications={toggleNotifications}
           />
         )}
       </main>

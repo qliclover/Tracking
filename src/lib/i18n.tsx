@@ -191,6 +191,20 @@ const DICT: Record<string, Entry> = {
   posted_status: { zh: '已入账', en: 'Posted' },
   days_after: { zh: '{v} 天后', en: 'in {v} days' },
 
+  // Notifications
+  notifications: { zh: '通知', en: 'Notifications' },
+  notif_enable: { zh: '开启提醒通知', en: 'Enable reminders' },
+  notif_desc: {
+    zh: '固定账单到期当天、以及预算接近或超支时,会收到推送提醒。',
+    en: "Get a push reminder on a bill's charge day, and when your budget gets close to or goes over.",
+  },
+  notif_permission_denied: { zh: '没有获得通知权限,请在系统设置里允许通知。', en: 'Notification permission was denied — allow notifications in system settings.' },
+  notif_bill_title: { zh: '固定账单提醒', en: 'Bill reminder' },
+  notif_bill_body: { zh: '「{name}」今天会自动从余额扣 {amount}。', en: '"{name}" ({amount}) is charged automatically today.' },
+  notif_budget_title: { zh: '预算提醒', en: 'Budget alert' },
+  notif_budget_warn_body: { zh: '本月预算快用完了,看看还能花多少。', en: "You're close to this month's budget — check how much is left." },
+  notif_budget_over_body: { zh: '本月已经超支了。', en: "You've gone over this month's budget." },
+
   // Categories (user-editable)
   manage_categories: { zh: '分类', en: 'Categories' },
   category_add_ph: { zh: '新分类名称', en: 'New category name' },
@@ -202,8 +216,8 @@ const DICT: Record<string, Entry> = {
   resets_on_day: { zh: '每月 {v} 号重置', en: 'Resets on day {v}' },
   not_signed_in: { zh: '未登录', en: 'Not signed in' },
   category_hint: {
-    zh: '改名会同步更新已记录的账目;删除不会影响历史记录,只是以后选不到了。',
-    en: "Renaming updates past entries too; deleting doesn't touch history — it just won't show up as a choice anymore.",
+    zh: '改名会同步更新已记录的账目;删除会把这个分类下的账目和账单转到其他分类,历史记录本身不会丢失。',
+    en: "Renaming updates past entries too; deleting moves its expenses and bills to another category — nothing in your history is lost.",
   },
   category_edit: { zh: '编辑', en: 'Edit' },
   delete_category: { zh: '删除分类', en: 'Delete category' },
