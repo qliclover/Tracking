@@ -29,7 +29,7 @@ const DICT: Record<string, Entry> = {
   record_it: { zh: '记下', en: 'Record it' },
   save_expense: { zh: '保存', en: 'Save expense' },
   discard: { zh: '放弃', en: 'Discard' },
-  err_amount: { zh: '请输入大于 0 的金额。', en: 'Enter an amount greater than 0.' },
+  err_amount: { zh: '请输入 0 到 10,000,000 之间的金额。', en: 'Enter an amount between 0 and 10,000,000.' },
   edit_expense_title: { zh: '编辑账目', en: 'Edit expense' },
   delete_expense: { zh: '删除账目', en: 'Delete expense' },
   confirm_delete_expense: { zh: '删除这笔账目?此操作不可撤销。', en: 'Delete this expense? This cannot be undone.' },

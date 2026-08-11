@@ -1,3 +1,7 @@
+/** Upper bound for a single amount field — guards against a fat-fingered extra
+ *  zero silently skewing the budget/stats totals. */
+export const MAX_AMOUNT = 10_000_000
+
 export function money(amount: number, currency: string): string {
   const sign = amount < 0 ? '-' : ''
   return `${sign}${currency}${group(Math.abs(amount))}`

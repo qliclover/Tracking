@@ -1,6 +1,6 @@
 import { FormEvent, ReactNode, useState } from 'react'
 import { ExpenseDraft } from '../lib/receipt'
-import { todayISO } from '../lib/format'
+import { todayISO, MAX_AMOUNT } from '../lib/format'
 import { categoryColor } from '../lib/categoryColors'
 import { categoryDisplay } from '../lib/categories'
 import { Category } from '../lib/types'
@@ -36,7 +36,7 @@ export function ExpenseForm({
   function submit(e: FormEvent) {
     e.preventDefault()
     const value = Number(amount)
-    if (!Number.isFinite(value) || value <= 0) {
+    if (!Number.isFinite(value) || value <= 0 || value > MAX_AMOUNT) {
       setError(t('err_amount'))
       return
     }
@@ -83,7 +83,7 @@ export function ExpenseForm({
             onClick={() => setCategory(c.name)}
           >
             <span className="dot" style={{ background: categoryColor(c.name, categories) }} />
-            {categoryDisplay(c.name, lang)}
+            <span>{categoryDisplay(c.name, lang)}</span>
           </button>
         ))}
       </div>
@@ -96,6 +96,7 @@ export function ExpenseForm({
             placeholder={t('optional')}
             value={note}
             onChange={(e) => setNote(e.target.value)}
+            maxLength={200}
           />
         </div>
         <div className="field">

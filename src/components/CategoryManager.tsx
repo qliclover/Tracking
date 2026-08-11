@@ -68,6 +68,7 @@ export function CategoryManager({ categories, onAdd, onRename, onDelete }: Props
                     if (e.key === 'Enter') commitEdit()
                     if (e.key === 'Escape') setEditing(null)
                   }}
+                  maxLength={20}
                   style={{
                     background: 'transparent',
                     border: 'none',
@@ -101,6 +102,7 @@ export function CategoryManager({ categories, onAdd, onRename, onDelete }: Props
             value={newName}
             onChange={(e) => setNewName(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && add()}
+            maxLength={20}
           />
           <button
             type="button"

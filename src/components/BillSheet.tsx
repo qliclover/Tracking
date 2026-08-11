@@ -3,6 +3,7 @@ import { Category, Recurring } from '../lib/types'
 import { categoryColor } from '../lib/categoryColors'
 import { categoryDisplay } from '../lib/categories'
 import { useT, useLang } from '../lib/i18n'
+import { MAX_AMOUNT } from '../lib/format'
 
 interface Props {
   open: boolean
@@ -43,7 +44,7 @@ export function BillSheet({ open, editing, categories, onAdd, onSave, onDelete, 
     const amt = Number(amount)
     const d = Number(day)
     if (!name.trim()) return setError(t('err_bill_name'))
-    if (!Number.isFinite(amt) || amt <= 0) return setError(t('err_amount'))
+    if (!Number.isFinite(amt) || amt <= 0 || amt > MAX_AMOUNT) return setError(t('err_amount'))
     if (!Number.isFinite(d) || d < 1 || d > 31) return setError(t('err_day'))
     const fields = {
       name: name.trim(),
@@ -72,7 +73,12 @@ export function BillSheet({ open, editing, categories, onAdd, onSave, onDelete, 
 
         <div className="field">
           <label className="flabel">{t('bill_name')}</label>
-          <input placeholder={t('bill_name_ph')} value={name} onChange={(e) => setName(e.target.value)} />
+          <input
+            placeholder={t('bill_name_ph')}
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            maxLength={40}
+          />
         </div>
 
         <div className="two">
@@ -96,7 +102,7 @@ export function BillSheet({ open, editing, categories, onAdd, onSave, onDelete, 
               onClick={() => setCategory(c.name)}
             >
               <span className="dot" style={{ background: categoryColor(c.name, categories) }} />
-              {categoryDisplay(c.name, lang)}
+              <span>{categoryDisplay(c.name, lang)}</span>
             </button>
           ))}
         </div>

@@ -391,6 +391,13 @@ body {
   font-size: 13px;
   cursor: pointer;
   font-family: var(--sans);
+  max-width: 160px;
+}
+.cat > :last-child {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
 }
 .cat.active {
   color: var(--fg);
