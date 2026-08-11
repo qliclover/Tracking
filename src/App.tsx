@@ -167,31 +167,41 @@ export default function App() {
     syncWidget(realSummary, state.settings.currency, label, monthName, state.settings.lang, realPeriodExpenses, state.categories)
   }, [realSummary, state.settings.currency, state.settings.lang, realPeriod, realPeriodExpenses, state.categories])
 
-  // Keep scheduled bill reminders in sync with the actual bill list.
+  // Keep scheduled bill reminders in sync with the actual bill list. Swallow
+  // failures (e.g. the native plugin isn't present in this build) — this is a
+  // background sync, not a user-initiated action with anywhere to show an error.
   useEffect(() => {
     if (!notificationsEnabled) return
-    scheduleBillReminders(state.recurring, state.settings.lang, state.settings.currency)
+    scheduleBillReminders(state.recurring, state.settings.lang, state.settings.currency).catch(() => {})
   }, [notificationsEnabled, state.recurring, state.settings.lang, state.settings.currency])
 
   // Budget-threshold alert — always the REAL current period, same reasoning as the widget sync above:
   // browsing to a past/future month must never trigger a notification about it.
   useEffect(() => {
     if (!notificationsEnabled) return
-    maybeNotifyBudgetWarning(realSummary.level, realPeriod.key, state.settings.lang)
+    maybeNotifyBudgetWarning(realSummary.level, realPeriod.key, state.settings.lang).catch(() => {})
   }, [notificationsEnabled, realSummary.level, realPeriod.key, state.settings.lang])
 
   async function toggleNotifications(next: boolean): Promise<boolean> {
-    if (!next) {
-      setNotificationsEnabled(false)
-      localStorage.setItem('margin.notif.enabled', '0')
-      await cancelBillReminders()
+    try {
+      if (!next) {
+        setNotificationsEnabled(false)
+        localStorage.setItem('margin.notif.enabled', '0')
+        await cancelBillReminders()
+        return true
+      }
+      const granted = await requestNotificationPermission()
+      if (!granted) return false
+      setNotificationsEnabled(true)
+      localStorage.setItem('margin.notif.enabled', '1')
       return true
+    } catch {
+      // Most likely cause: this build doesn't have the native plugin compiled
+      // in (e.g. testing an install from before it was added) — surface it as
+      // the same "couldn't enable" state as a denied permission, rather than
+      // leaving the toggle looking like it silently did nothing.
+      return false
     }
-    const granted = await requestNotificationPermission()
-    if (!granted) return false
-    setNotificationsEnabled(true)
-    localStorage.setItem('margin.notif.enabled', '1')
-    return true
   }
 
   function update(mut: (s: AppState) => AppState) {
